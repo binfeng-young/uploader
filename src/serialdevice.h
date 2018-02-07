@@ -8,7 +8,8 @@
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
 
-class SerialDevice {
+class SerialDevice :public QObject{
+    Q_OBJECT
 public:
     SerialDevice(QObject *parent = 0);
 
@@ -32,8 +33,8 @@ public:
 
 public slots:
 
-    void ReceivePacket();
-
+signals:
+    void test();
 private:
     bool m_deviceOpened;
 private:

@@ -63,7 +63,7 @@ QByteArray SerialDevice::readAll() {
 }
 
 int SerialDevice::sendData(uint8_t *buf, uint16_t size) {
-
+    emit(test());
     return true;
 }
 

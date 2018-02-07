@@ -4,12 +4,16 @@ set (CMAKE_PREFIX_PATH "C:/Qt/Qt5.10.0/5.10.0/mingw53_32")
 find_package(Qt5 REQUIRED COMPONENTS Widgets SerialPort)
 set(QT_LIBRARIES Qt5::Widgets Qt5::SerialPort)
 
+include_directories(ssp dfu)
+
+add_subdirectory(ssp)
+add_subdirectory(dfu)
 set(baseic_srcs
         main.cpp
         mainwindow.cpp
-        serialdevice.cpp serialdevice.h
+        serialdevice.cpp
         )
-set(moc_files mainwindow.h)
+set(moc_files mainwindow.h serialdevice.h)
 set(uic_files mainwindow.ui)
 
 QT5_WRAP_CPP(moc_srcs ${moc_files})

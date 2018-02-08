@@ -1,5 +1,5 @@
 
-set(ssp_src
+set(ssp_srcs
         common.h
         port.cpp port.h
         ssp.cpp ssp.h
@@ -7,7 +7,7 @@ set(ssp_src
         qsspt.cpp qsspt.h
         )
 
-add_library(ssp ${ssp_src})
+add_library(ssp ${ssp_srcs} ${moc_srcs})
 target_link_libraries(ssp ${QT_LIBRARIES})
 
 add_executable(ssp_test main.cpp)

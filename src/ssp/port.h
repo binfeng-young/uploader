@@ -42,7 +42,7 @@ class port : public QObject {
 public:
     enum portstatus { open, closed, error };
 
-    port(QString name, bool debug);
+    port(const QString &name, bool debug);
     virtual ~port();
     portstatus status();
 

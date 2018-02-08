@@ -30,7 +30,7 @@
 #include <QSerialPort>
 #include <QDebug>
 
-port::port(QString name, bool debug) : mstatus(port::closed), debug(debug)
+port::port(const QString &name, bool debug) : mstatus(port::closed), debug(debug)
 {
     timer.start();
     sport = new QSerialPort(name, this);

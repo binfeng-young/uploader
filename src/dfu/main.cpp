@@ -28,10 +28,6 @@
 #include "dfu.h"
 
 #include <QCoreApplication>
-#include <QFile>
-#include <QByteArray>
-#include <QThread>
-#include <QStringList>
 #include <QDebug>
 
 #include <iostream>

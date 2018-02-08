@@ -57,8 +57,8 @@ DFUObject::DFUObject(bool _debug, bool _use_serial, QString portname) :
         info->rxBufSize  = MAX_PACKET_DATA_LEN;
         info->txBuf      = sspTxBuf;
         info->txBufSize  = MAX_PACKET_DATA_LEN;
-        info->max_retry  = 3;
-        info->timeoutLen = 100;
+        info->max_retry  = 10;
+        info->timeoutLen = 1000;
         if (info->status() != port::open) {
             cout << "Could not open serial port\n";
             mready = false;
@@ -296,9 +296,9 @@ bool DFUObject::UploadData(qint32 const & numberOfBytes, QByteArray & data)
         // qDebug()<<" Data0="<<(int)data[0]<<" Data0="<<(int)data[1]<<" Data0="<<(int)data[2]<<" Data0="<<(int)data[3]<<" buf6="<<(int)buf[6]<<" buf7="<<(int)buf[7]<<" buf8="<<(int)buf[8]<<" buf9="<<(int)buf[9];
         // QThread::msleep(send_delay);
 
-        if (StatusRequest() != DFU::uploading) {
-            return false;
-        }
+        // if (StatusRequest() != DFU::uploading) {
+        // return false;
+        // }
         int result = sendData(buf, BUF_LEN);
         // if (debug) {
         // qDebug() << "sent:" << result;
@@ -366,7 +366,7 @@ QString DFUObject::DownloadDescription(int const & numberOfChars)
 
     StartDownloadT(&arr, numberOfChars, DFU::Descript);
 
-    int index = arr.indexOf(255);
+    int index = arr.indexOf((char)255);
     return QString((index == -1) ? arr : arr.left(index));
 }
 
@@ -596,7 +596,20 @@ DFU::Status DFUObject::StatusRequest()
     buf[8] = 0;
     buf[9] = 0;
 
-    int result = sendData(buf, BUF_LEN);
+    int result    = sendData(buf, BUF_LEN);
+    int retry_cnt = 0;
+    const int MaxSendRetry = 10, SendRetryIntervalMS = 1000;
+    while (result < 0 && retry_cnt < MaxSendRetry) {
+        retry_cnt++;
+        qWarning() << "StatusRequest failed, sleeping" << SendRetryIntervalMS << "ms";
+        QThread::msleep(SendRetryIntervalMS);
+        qWarning() << "StatusRequest retry attempt" << retry_cnt;
+        result = sendData(buf, BUF_LEN);
+    }
+    if (retry_cnt >= MaxSendRetry) {
+        qWarning() << "StatusRequest failed too many times, aborting";
+        return DFU::abort;
+    }
     if (debug) {
         qDebug() << "StatusRequest: " << result << " bytes sent";
     }
@@ -766,7 +779,7 @@ DFU::Status DFUObject::UploadFirmwareT(const QString &sfile, const bool &verify,
         ++pad;
         pad = pad * 4;
         pad = pad - arr.length();
-        arr.append(QByteArray(pad, 255));
+        arr.append(QByteArray(pad, (char)255));
     }
     if (devices[device].SizeOfCode < (quint32)arr.length()) {
         if (debug) {
@@ -872,7 +885,7 @@ DFU::Status DFUObject::CompareFirmware(const QString &sfile, const CompareType &
         ++pad;
         pad = pad * 4;
         pad = pad - arr.length();
-        arr.append(QByteArray(pad, 255));
+        arr.append(QByteArray(pad, (char)255));
     }
     if (type == DFU::crccompare) {
         quint32 crc = DFUObject::CRCFromQBArray(arr, devices[device].SizeOfCode);
@@ -1021,9 +1034,10 @@ quint32 DFUObject::CRCFromQBArray(QByteArray array, quint32 Size)
 {
     quint32 pad = Size - array.length();
 
-    array.append(QByteArray(pad, 255));
-    quint32 t[Size / 4];
-    for (int x = 0; x < array.length() / 4; x++) {
+    array.append(QByteArray(pad, (char)255));
+    int num_words = Size / 4;
+    quint32 *t    = (quint32 *)malloc(Size);
+    for (int x = 0; x < num_words; x++) {
         quint32 aux = 0;
         aux  = (char)array[x * 4 + 3] & 0xFF;
         aux  = aux << 8;
@@ -1034,7 +1048,10 @@ quint32 DFUObject::CRCFromQBArray(QByteArray array, quint32 Size)
         aux += (char)array[x * 4 + 0] & 0xFF;
         t[x] = aux;
     }
-    return DFUObject::CRC32WideFast(0xFFFFFFFF, Size / 4, (quint32 *)t);
+    quint32 ret = DFUObject::CRC32WideFast(0xFFFFFFFF, num_words, t);
+    free(t);
+
+    return ret;
 }
 
 /**
@@ -1081,7 +1098,7 @@ int DFUObject::receiveData(void *data, int size)
     time.start();
     while (true) {
         if ((x = serialhandle->read_Packet(((char *)data) + 1) != -1) || time.elapsed() > 10000) {
-            QThread::msleep(10);
+            // QThread::msleep(10);
             if (time.elapsed() > 10000) {
                 qDebug() << "____timeout";
             }

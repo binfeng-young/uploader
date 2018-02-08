@@ -43,7 +43,7 @@
 class qsspt;
 
 // usb
-class opHID_hidapi;
+//class opHID_hidapi;
 
 namespace DFU {
 #if QT_VERSION >= QT_VERSION_CHECK(5, 8, 0)

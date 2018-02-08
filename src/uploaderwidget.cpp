@@ -51,11 +51,11 @@
 
 #define DFU_DEBUG true
 
-const int UploaderGadgetWidget::BOARD_EVENT_TIMEOUT = 20000;
-const int UploaderGadgetWidget::AUTOUPDATE_CLOSE_TIMEOUT = 7000;
-const int UploaderGadgetWidget::REBOOT_TIMEOUT     = 20000;
-const int UploaderGadgetWidget::ERASE_TIMEOUT      = 20000;
-const int UploaderGadgetWidget::BOOTLOADER_TIMEOUT = 20000;
+const int UploaderWidget::BOARD_EVENT_TIMEOUT = 20000;
+const int UploaderWidget::AUTOUPDATE_CLOSE_TIMEOUT = 7000;
+const int UploaderWidget::REBOOT_TIMEOUT     = 20000;
+const int UploaderWidget::ERASE_TIMEOUT      = 20000;
+const int UploaderWidget::BOOTLOADER_TIMEOUT = 20000;
 
 TimedDialog::TimedDialog(const QString &title, const QString &labelText, int timeout, QWidget *parent, Qt::WindowFlags flags) :
     QProgressDialog(labelText, tr("Cancel"), 0, timeout, parent, flags), bar(new QProgressBar(this))
@@ -140,7 +140,7 @@ int ConnectionWaiter::openDialog(const QString &title, const QString &labelText,
     return waiter.exec();
 }
 
-UploaderGadgetWidget::UploaderGadgetWidget(QWidget *parent) :
+UploaderWidget::UploaderWidget(QWidget *parent) :
     QWidget(parent), m_config(new Ui::UploaderWidget())
 {
     m_config->setupUi(this);
@@ -195,7 +195,7 @@ bool sortPorts(const QSerialPortInfo &s1, const QSerialPortInfo &s2)
 /**
    Gets the list of serial ports
  */
-void UploaderGadgetWidget::getSerialPorts()
+void UploaderWidget::getSerialPorts()
 {
     QStringList list;
 
@@ -215,7 +215,7 @@ void UploaderGadgetWidget::getSerialPorts()
 }
 
 
-QString UploaderGadgetWidget::getPortDevice(const QString &friendName)
+QString UploaderWidget::getPortDevice(const QString &friendName)
 {
     QList<QSerialPortInfo> ports = QSerialPortInfo::availablePorts();
     foreach(QSerialPortInfo port, ports) {
@@ -226,7 +226,7 @@ QString UploaderGadgetWidget::getPortDevice(const QString &friendName)
     return "";
 }
 
-void UploaderGadgetWidget::connectSignalSlot(QWidget *widget)
+void UploaderWidget::connectSignalSlot(QWidget *widget)
 {
     connect(qobject_cast<DeviceWidget *>(widget), SIGNAL(uploadStarted()), this, SLOT(uploadStarted()));
     connect(qobject_cast<DeviceWidget *>(widget), SIGNAL(uploadEnded(bool)), this, SLOT(uploadEnded(bool)));
@@ -234,7 +234,7 @@ void UploaderGadgetWidget::connectSignalSlot(QWidget *widget)
     connect(qobject_cast<DeviceWidget *>(widget), SIGNAL(downloadEnded(bool)), this, SLOT(downloadEnded(bool)));
 }
 
-FlightStatus *UploaderGadgetWidget::getFlightStatus()
+FlightStatus *UploaderWidget::getFlightStatus()
 {
 //    ExtensionSystem::PluginManager *pm = ExtensionSystem::PluginManager::instance();
 //
@@ -246,7 +246,7 @@ FlightStatus *UploaderGadgetWidget::getFlightStatus()
    // return status;
 }
 
-void UploaderGadgetWidget::bootButtonsSetEnable(bool enabled)
+void UploaderWidget::bootButtonsSetEnable(bool enabled)
 {
     m_config->bootButton->setEnabled(enabled);
     m_config->safeBootButton->setEnabled(enabled);
@@ -256,7 +256,7 @@ void UploaderGadgetWidget::bootButtonsSetEnable(bool enabled)
     m_config->eraseBootButton->setEnabled(isBL4 && enabled);
 }
 
-void UploaderGadgetWidget::onPhysicalHWConnect()
+void UploaderWidget::onPhysicalHWConnect()
 {
     bootButtonsSetEnable(false);
     m_config->rescueButton->setEnabled(false);
@@ -266,12 +266,12 @@ void UploaderGadgetWidget::onPhysicalHWConnect()
 /**
    Enables widget buttons if autopilot connected
  */
-void UploaderGadgetWidget::onAutopilotConnect()
+void UploaderWidget::onAutopilotConnect()
 {
     QTimer::singleShot(1000, this, SLOT(populate()));
 }
 
-void UploaderGadgetWidget::populate()
+void UploaderWidget::populate()
 {
     m_config->haltButton->setEnabled(true);
     m_config->resetButton->setEnabled(true);
@@ -294,7 +294,7 @@ void UploaderGadgetWidget::populate()
 /**
    Enables widget buttons if autopilot disconnected
  */
-void UploaderGadgetWidget::onAutopilotDisconnect()
+void UploaderWidget::onAutopilotDisconnect()
 {
     m_config->haltButton->setEnabled(false);
     m_config->resetButton->setEnabled(false);
@@ -321,7 +321,7 @@ static void sleep(int ms)
    - Send the relevant IAP commands
    - setup callback for MoBo acknowledge
  */
-void UploaderGadgetWidget::goToBootloader(UAVObject *callerObj, bool success)
+void UploaderWidget::goToBootloader(UAVObject *callerObj, bool success)
 {
     /*
     Q_UNUSED(callerObj);
@@ -502,7 +502,7 @@ void UploaderGadgetWidget::goToBootloader(UAVObject *callerObj, bool success)
      */
 }
 
-void UploaderGadgetWidget::systemHalt()
+void UploaderWidget::systemHalt()
 {
     // The board can not be halted when in armed state.
     // If board is armed, or arming. Show message with notice.
@@ -520,7 +520,7 @@ void UploaderGadgetWidget::systemHalt()
    - Send the relevant IAP commands
    - setup callback for MoBo acknowledge
  */
-void UploaderGadgetWidget::systemReset()
+void UploaderWidget::systemReset()
 {
 //    FlightStatus *status = getFlightStatus();
 //
@@ -540,17 +540,17 @@ void UploaderGadgetWidget::systemReset()
 //    }
 }
 
-void UploaderGadgetWidget::systemBoot()
+void UploaderWidget::systemBoot()
 {
     commonSystemBoot(false, false);
 }
 
-void UploaderGadgetWidget::systemSafeBoot()
+void UploaderWidget::systemSafeBoot()
 {
     commonSystemBoot(true, false);
 }
 
-void UploaderGadgetWidget::systemEraseBoot()
+void UploaderWidget::systemEraseBoot()
 {
 //    switch (confirmEraseSettingsMessageBox()) {
 //    case QMessageBox::Ok:
@@ -563,14 +563,14 @@ void UploaderGadgetWidget::systemEraseBoot()
 //    }
 }
 
-void UploaderGadgetWidget::rebootWithDialog()
+void UploaderWidget::rebootWithDialog()
 {
     //RebootDialog dialog(this);
 
     //dialog.exec();
 }
 
-void UploaderGadgetWidget::systemReboot()
+void UploaderWidget::systemReboot()
 {
     /*
     ResultEventLoop eventLoop;
@@ -617,7 +617,7 @@ void UploaderGadgetWidget::systemReboot()
  * Tells the system to boot (from Bootloader state)
  * @param[in] safeboot Indicates whether the firmware should use the stock HWSettings
  */
-void UploaderGadgetWidget::commonSystemBoot(bool safeboot, bool erase)
+void UploaderWidget::commonSystemBoot(bool safeboot, bool erase)
 {
     /*
     clearLog();
@@ -678,12 +678,12 @@ void UploaderGadgetWidget::commonSystemBoot(bool safeboot, bool erase)
      */
 }
 
-bool UploaderGadgetWidget::autoUpdateCapable()
+bool UploaderWidget::autoUpdateCapable()
 {
     //return QDir(":/firmware").exists();
 }
 
-bool UploaderGadgetWidget::autoUpdate(bool erase)
+bool UploaderWidget::autoUpdate(bool erase)
 {/*
     ExtensionSystem::PluginManager *pluginManager = ExtensionSystem::PluginManager::instance();
 
@@ -876,17 +876,17 @@ bool UploaderGadgetWidget::autoUpdate(bool erase)
     */
 }
 
-void UploaderGadgetWidget::autoUpdateDisconnectProgress(int value)
+void UploaderWidget::autoUpdateDisconnectProgress(int value)
 {
     emit progressUpdate(WAITING_DISCONNECT, value);
 }
 
-void UploaderGadgetWidget::autoUpdateConnectProgress(int value)
+void UploaderWidget::autoUpdateConnectProgress(int value)
 {
     emit progressUpdate(WAITING_CONNECT, value);
 }
 
-void UploaderGadgetWidget::autoUpdateFlashProgress(int value)
+void UploaderWidget::autoUpdateFlashProgress(int value)
 {
     emit progressUpdate(UPLOADING_FW, value);
 }
@@ -895,7 +895,7 @@ void UploaderGadgetWidget::autoUpdateFlashProgress(int value)
    Attempt a guided procedure to put both boards in BL mode when
    the system is not bootable
  */
-void UploaderGadgetWidget::systemRescue()
+void UploaderWidget::systemRescue()
 {
 //    Core::ConnectionManager *cm = Core::ICore::instance()->connectionManager();
 //    cm->disconnectDevice();
@@ -1022,7 +1022,7 @@ void UploaderGadgetWidget::systemRescue()
     m_currentIAPStep = IAP_STATE_BOOTLOADER;
 }
 
-void UploaderGadgetWidget::uploadStarted()
+void UploaderWidget::uploadStarted()
 {
     m_config->haltButton->setEnabled(false);
     bootButtonsSetEnable(false);
@@ -1030,7 +1030,7 @@ void UploaderGadgetWidget::uploadStarted()
     m_config->rescueButton->setEnabled(false);
 }
 
-void UploaderGadgetWidget::uploadEnded(bool succeed)
+void UploaderWidget::uploadEnded(bool succeed)
 {
     Q_UNUSED(succeed);
     // device is halted so no halt
@@ -1041,7 +1041,7 @@ void UploaderGadgetWidget::uploadEnded(bool succeed)
     m_config->rescueButton->setEnabled(true);
 }
 
-void UploaderGadgetWidget::downloadStarted()
+void UploaderWidget::downloadStarted()
 {
     m_config->haltButton->setEnabled(false);
     bootButtonsSetEnable(false);
@@ -1049,7 +1049,7 @@ void UploaderGadgetWidget::downloadStarted()
     m_config->rescueButton->setEnabled(false);
 }
 
-void UploaderGadgetWidget::downloadEnded(bool succeed)
+void UploaderWidget::downloadEnded(bool succeed)
 {
     Q_UNUSED(succeed);
     // device is halted so no halt
@@ -1060,12 +1060,12 @@ void UploaderGadgetWidget::downloadEnded(bool succeed)
     m_config->rescueButton->setEnabled(true);
 }
 
-void UploaderGadgetWidget::startAutoUpdate()
+void UploaderWidget::startAutoUpdate()
 {
     startAutoUpdate(false);
 }
 
-void UploaderGadgetWidget::startAutoUpdateErase()
+void UploaderWidget::startAutoUpdateErase()
 {
     startAutoUpdate(true);
 
@@ -1079,7 +1079,7 @@ void UploaderGadgetWidget::startAutoUpdateErase()
 //    }
 }
 
-void UploaderGadgetWidget::startAutoUpdate(bool erase)
+void UploaderWidget::startAutoUpdate(bool erase)
 {
     m_config->autoUpdateProgressBar->setValue(0);
     autoUpdateStatus(uploader::JUMP_TO_BL, QVariant());
@@ -1092,7 +1092,7 @@ void UploaderGadgetWidget::startAutoUpdate(bool erase)
     autoUpdate(erase);
 }
 
-void UploaderGadgetWidget::finishAutoUpdate()
+void UploaderWidget::finishAutoUpdate()
 {
     disconnect(this, SIGNAL(progressUpdate(uploader::ProgressStep, QVariant)), this, SLOT(autoUpdateStatus(uploader::ProgressStep, QVariant)));
     m_config->autoUpdateOkButton->setEnabled(true);
@@ -1102,7 +1102,7 @@ void UploaderGadgetWidget::finishAutoUpdate()
     QTimer::singleShot(AUTOUPDATE_CLOSE_TIMEOUT, this, SLOT(closeAutoUpdate()));
 }
 
-void UploaderGadgetWidget::closeAutoUpdate()
+void UploaderWidget::closeAutoUpdate()
 {
     if (m_autoUpdateClosing) {
         m_config->autoUpdateGroupBox->setVisible(false);
@@ -1112,7 +1112,7 @@ void UploaderGadgetWidget::closeAutoUpdate()
     m_autoUpdateClosing = false;
 }
 
-void UploaderGadgetWidget::autoUpdateStatus(uploader::ProgressStep status, QVariant value)
+void UploaderWidget::autoUpdateStatus(uploader::ProgressStep status, QVariant value)
 {
     QString msg;
     int remaining;
@@ -1178,13 +1178,13 @@ void UploaderGadgetWidget::autoUpdateStatus(uploader::ProgressStep status, QVari
 /**
    Update log entry
  */
-void UploaderGadgetWidget::log(QString str)
+void UploaderWidget::log(QString str)
 {
     qDebug() << "UploaderGadgetWidget -" << str;
     m_config->textBrowser->append(str);
 }
 
-void UploaderGadgetWidget::clearLog()
+void UploaderWidget::clearLog()
 {
     m_config->textBrowser->clear();
 }
@@ -1192,7 +1192,7 @@ void UploaderGadgetWidget::clearLog()
 /**
  * Remove all the device widgets...
  */
-UploaderGadgetWidget::~UploaderGadgetWidget()
+UploaderWidget::~UploaderWidget()
 {
     while (m_config->systemElements->count()) {
         QWidget *qw = m_config->systemElements->widget(0);
@@ -1202,13 +1202,13 @@ UploaderGadgetWidget::~UploaderGadgetWidget()
     }
 }
 
-void UploaderGadgetWidget::openHelp()
+void UploaderWidget::openHelp()
 {
 //    QDesktopServices::openUrl(QUrl(QString(WIKI_URL_ROOT) + QString("Firmware+Tab"),
 //                                   QUrl::StrictMode));
 }
 
-int UploaderGadgetWidget::confirmEraseSettingsMessageBox()
+int UploaderWidget::confirmEraseSettingsMessageBox()
 {
     QMessageBox msgBox(this);
 
@@ -1220,7 +1220,7 @@ int UploaderGadgetWidget::confirmEraseSettingsMessageBox()
     return msgBox.exec();
 }
 
-int UploaderGadgetWidget::cannotHaltMessageBox()
+int UploaderWidget::cannotHaltMessageBox()
 {
     QMessageBox msgBox(this);
 
@@ -1232,7 +1232,7 @@ int UploaderGadgetWidget::cannotHaltMessageBox()
     return msgBox.exec();
 }
 
-int UploaderGadgetWidget::cannotResetMessageBox()
+int UploaderWidget::cannotResetMessageBox()
 {
     QMessageBox msgBox(this);
 

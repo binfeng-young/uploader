@@ -104,12 +104,12 @@ private:
     QTimer m_timer;
 };
 
-class UploaderGadgetWidget : public QWidget {
+class UploaderWidget : public QWidget {
     Q_OBJECT
 
 public:
-    UploaderGadgetWidget(QWidget *parent = 0);
-    ~UploaderGadgetWidget();
+    UploaderWidget(QWidget *parent = 0);
+    ~UploaderWidget();
 
     static const int BOARD_EVENT_TIMEOUT;
     static const int AUTOUPDATE_CLOSE_TIMEOUT;

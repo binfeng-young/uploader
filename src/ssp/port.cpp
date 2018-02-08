@@ -50,7 +50,7 @@ port::port(const QString &name, bool debug) : mstatus(port::closed), debug(debug
 
 port::~port()
 {
-    sport->close();
+    sport->deleteLater();
 }
 
 port::portstatus port::status()

@@ -67,6 +67,7 @@ TimedDialog::TimedDialog(const QString &title, const QString &labelText, int tim
     // setup progress bar
     bar->setRange(0, timeout);
     bar->setFormat(tr("Timing out in %1 seconds").arg(timeout));
+    bar->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     setBar(bar);
 }
 
@@ -619,19 +620,18 @@ void UploaderWidget::systemReboot()
  */
 void UploaderWidget::commonSystemBoot(bool safeboot, bool erase)
 {
-    /*
     clearLog();
     bootButtonsSetEnable(false);
-    // Suspend telemety & polling in case it is not done yet
-    Core::ConnectionManager *cm = Core::ICore::instance()->connectionManager();
-    cm->disconnectDevice();
-    cm->suspendPolling();
+//    // Suspend telemety & polling in case it is not done yet
+//    Core::ConnectionManager *cm = Core::ICore::instance()->connectionManager();
+//    cm->disconnectDevice();
+//    cm->suspendPolling();
 
     QString devName = m_config->telemetryLink->currentText();
     log("Attempting to boot the system through " + devName + ".");
     repaint();
 
-    if (!m_dfu) {
+    if (nullptr == m_dfu) {
         if (devName == "USB") {
             m_dfu = new DFUObject(DFU_DEBUG, false, QString());
         } else {
@@ -651,7 +651,7 @@ void UploaderWidget::commonSystemBoot(bool safeboot, bool erase)
     log("Booting system...");
     m_dfu->JumpToApp(safeboot, erase);
     // Restart the polling thread
-    cm->resumePolling();
+    // cm->resumePolling();
     m_config->rescueButton->setEnabled(true);
     m_config->telemetryLink->setEnabled(true);
     m_config->boardStatus->setText(tr("Running"));
@@ -673,9 +673,8 @@ void UploaderWidget::commonSystemBoot(bool safeboot, bool erase)
     m_currentIAPStep = IAP_STATE_READY;
     log("You can now reconnect telemetry...");
     delete m_dfu; // Frees up the USB/Serial port too
+    m_dfu = nullptr;
     emit bootSuccess();
-    m_dfu = NULL;
-     */
 }
 
 bool UploaderWidget::autoUpdateCapable()
@@ -911,13 +910,13 @@ void UploaderWidget::systemRescue()
 
     // Existing DFU objects will have a handle over USB and will
     // disturb everything for the rescue process:
-    if (m_dfu) {
+    if (nullptr != m_dfu) {
         delete m_dfu;
-        m_dfu = NULL;
+        m_dfu = nullptr;
     }
 
     // Avoid users pressing Rescue twice.
-    m_config->rescueButton->setEnabled(false);
+    //this->setEnabled(false);
 
     // Now we're good to go
     clearLog();
@@ -925,24 +924,18 @@ void UploaderWidget::systemRescue()
     log("** Follow those instructions to attempt a system rescue **");
     log("**********************************************************");
     log("You will be prompted to first connect USB, then system power");
-    log(m_config->telemetryLink->currentText() + " **** \n");
     QString devName = m_config->telemetryLink->currentText();
     // Check if boards are connected and, if yes, prompt user to disconnect them all
     if(devName != "USB") {
         m_dfu = new DFUObject(DFU_DEBUG, true, devName);
-
-//        if (m_dfu->findDevices() || m_dfu->numberOfDevices!=0) {
-//            log("device");
-//            while (true) {
-//                log(m_dfu->receive());
-//                QThread::msleep(1000);
-//            }
-//        }
         if (!m_dfu->ready()){
+            this->setEnabled(true);
             log("not ready");
-            //return;
+            delete m_dfu;
+            m_dfu = nullptr;
+            return;
         } else {
-        log("ready");
+            log("ready");
         }
     } else {
 //    if (USBMonitor::instance()->availableDevices(0x20a0, -1, -1, -1).length() > 0) {
@@ -960,23 +953,25 @@ void UploaderWidget::systemRescue()
 //        }
 //    }
 
-    // Now prompt user to connect board
-    QString labelText = QString("<p align=\"left\">%1<br>%2</p>").arg(tr("Please connect your board.")).arg(tr("Board must be connected to the USB port!"));
-    int result = ConnectionWaiter::openDialog(tr("System Rescue"), labelText, 1, BOARD_EVENT_TIMEOUT, this);
-    switch (result) {
-    case ConnectionWaiter::Canceled:
-        m_config->rescueButton->setEnabled(true);
-        return;
-
-    case ConnectionWaiter::TimedOut:
-        QMessageBox::warning(this, tr("System Rescue"), tr("Timed out while waiting for a board to be connected!"));
-        m_config->rescueButton->setEnabled(true);
-        return;
+        // Now prompt user to connect board
+        QString labelText = QString("<p align=\"left\">%1</p>").arg(tr("Please connect your board."));
+        int result = ConnectionWaiter::openDialog(tr("System Rescue"), labelText, 1, BOARD_EVENT_TIMEOUT, this);
+        switch (result) {
+            case ConnectionWaiter::Canceled:
+                this->setEnabled(true);
+                return;
+            case ConnectionWaiter::TimedOut:
+                QMessageBox::warning(this, tr("System Rescue"),
+                                     tr("Timed out while waiting for a board to be connected!"));
+                this->setEnabled(true);
+                return;
+            default:
+                break;
+        }
+        log("Detecting first board...");
+        m_dfu = new DFUObject(DFU_DEBUG, false, QString());
     }
-
-    log("Detecting first board...");
-    m_dfu = new DFUObject(DFU_DEBUG, false, QString());
-    }
+    this->setEnabled(true);
     m_dfu->AbortOperation();
     if (!m_dfu->enterDFU(0)) {
         log("Could not enter DFU mode.");
@@ -1000,7 +995,7 @@ void UploaderWidget::systemRescue()
     if (m_dfu->numberOfDevices > 5) {
         log("Inconsistent number of devices, aborting!");
         delete m_dfu;
-        m_dfu = NULL;
+        m_dfu = nullptr;
         //cm->resumePolling();
         m_config->rescueButton->setEnabled(true);
         return;

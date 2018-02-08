@@ -34,9 +34,6 @@ qsspt::qsspt(port *info, bool debug) : qssp(info, debug), endthread(false), data
 
 qsspt::~qsspt()
 {
-    endthread = true;
-    // TODO bad...
-    wait(1000);
 }
 
 void qsspt::run()
@@ -109,4 +106,9 @@ int qsspt::read_Packet(void *data)
     }
     mutex.unlock();
     return arr.length();
+}
+
+void qsspt::end()
+{
+    endthread = true;
 }

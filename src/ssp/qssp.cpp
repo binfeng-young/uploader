@@ -825,10 +825,6 @@ qssp::qssp(port *info, bool debug) : debug(debug)
 
 qssp::~qssp()
 {
-    if (thisport) {
-        delete thisport;
-        thisport = nullptr;
-    }
 }
 
 void qssp::pfCallBack(uint8_t *buf, uint16_t size)

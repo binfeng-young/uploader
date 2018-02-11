@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/select.h>
+#include <sys/prctl.h>
 
 /******************************全局变量定义***************************************/
 int serial_data_flag = false;
@@ -31,7 +32,7 @@ int Cleaner_Radian=0;
 int Square_init_flag=0;
 unsigned char Run_mode=1;
 int serial_port=0;
-int gawFdUart[UART_PORT_NUM] = {-1, -1, -1, -1};
+int gawFdUart[UART_PORT_NUM] = {-1, -1, -1, -1, -1};
 
 volatile char posestateflag=0;
 
@@ -1392,7 +1393,7 @@ int set_opt(int fd,int wSpeed, int wBits, char cEvent, int wStop)
 
 int bv_uart_open(int uart_port,int baud_rate)
 {    
-	char *dev[]={"/dev/ttyS0","/dev/ttyS1","/dev/ttyS2","/dev/ttyS3","/dev/ttyS4"};
+	char *dev[]={"/dev/ttyS0","/dev/ttyS1","/dev/ttyS2","/dev/ttyS3","/dev/ttyS4","/dev/ttyUSB0"};
 	int wRlt = 0;
 	int fd = -1;
 
@@ -1400,7 +1401,7 @@ int bv_uart_open(int uart_port,int baud_rate)
     fd = open(dev[uart_port], O_RDWR | O_NOCTTY | O_NONBLOCK | O_NDELAY);
     if (fd < 0)
     {
-        printf("uart%d open err!",uart_port);
+        printf("uart %d open err!",uart_port);
         return -1;
     }
 
@@ -1426,11 +1427,11 @@ int bv_uart_open(int uart_port,int baud_rate)
 	}
 
     printf("fd-open=%d\n",fd);
-
+	gawFdUart[uart_port] = fd;
 	wRlt = set_opt(fd, baud_rate, UART_DATAT_BIT_8, 'N', UART_STOP_BIT_2);
 	if (wRlt < 0)
     {
-        printf("set_opt  err!");
+        printf("set_opt  err!\n");
         return -1;
     }
 	
@@ -1478,7 +1479,7 @@ void bv_uart_close(int uart_port)
 *
 *
 ******************************************************************************/
-int bv_uart_write(int uart_port, char* p_data_buf, int data_len)
+int bv_uart_write(int uart_port, unsigned char *p_data_buf, int data_len)
 {
 	int len;
 	int fd=-1;
@@ -1492,7 +1493,7 @@ int bv_uart_write(int uart_port, char* p_data_buf, int data_len)
 	else   
 	{
 		tcflush(fd,TCOFLUSH);
-		printf("uart write err.");
+		printf("uart write err.\n");
 		return -1;
 	}
 }
@@ -1525,12 +1526,13 @@ int bv_uart_read(int uart_port, char* p_data_buf,int buf_size)
 
 	pbuf = p_data_buf;
 	fd = gawFdUart[uart_port];
+	printf("fd %d\n",fd);
 
     FD_ZERO(&fs_read);
     FD_SET(fd,&fs_read);
 
-    time.tv_sec = 5;
-    time.tv_usec = 0;
+    time.tv_sec = 0;
+    time.tv_usec = 100000;
 	recvlen = 0;
 
     /*使用select实现串口的多路通信*/
@@ -1543,6 +1545,7 @@ int bv_uart_read(int uart_port, char* p_data_buf,int buf_size)
 			len = read(fd, pbuf, buf_size);
 			if (len > 0)
 	        {
+				//printf("%s\n", pbuf);
 	            recvlen += len;
 				pbuf += len;
 	        }
@@ -1550,13 +1553,14 @@ int bv_uart_read(int uart_port, char* p_data_buf,int buf_size)
 	        {
 	            break;
 	    	}
+			if (len >= buf_size) break;
 	    }
 	}
 	else
 	{
-		printf("uart read time out.");
+		printf("uart read time out\n.");
 		recvlen = -1;
-	} 
+	}
 	
 	return recvlen;
 
@@ -1589,11 +1593,10 @@ void* bv_uart_thread(void *data)
 //	/*设置线程名称*/
 //	prctl(PR_SET_NAME, "bv_uart_thread");
 //
-//    sprintf(file_name,"/mnt/UDISK/bvlog/uart_idx_%d.log",g_sys_up_index);
 //    fp = fopen(file_name, "wt+");
 //	if (!fp)
 //	{
-//		bv_loge("fopen uart_idx_%d.log  err!",g_sys_up_index);
+//		printf("fopen uart_idx_%d.log  err!");
 //	}
 //
 //	/*init uart*/
@@ -1601,12 +1604,12 @@ void* bv_uart_thread(void *data)
 //	if (rtn > 0)
 //	{
 //		gawFdUart[serial_port] = rtn;
-//		bv_logi("uart%d opened[%d].\n",serial_port,rtn);
+//		printf("uart%d opened[%d].\n",serial_port,rtn);
 //		fprintf(fp, "uart%d opened[%d].\n",serial_port,rtn);
 //	}
 //	else
 //	{
-//		bv_loge("uart%d opened[%d] false.\n",serial_port,rtn);
+//		printf("uart%d opened[%d] false.\n",serial_port,rtn);
 //		fprintf(fp, "uart%d opened[%d] false.\n",serial_port,rtn);
 //	}
 //
@@ -1618,7 +1621,7 @@ void* bv_uart_thread(void *data)
 //
 //    while (fd < 0)
 //    {
-//    	bv_loge( "waiting uart%d init ... \n",serial_port);
+//		printf( "waiting uart%d init ... \n",serial_port);
 //		bv_seconds_sleep(1);
 //		fd = gawFdUart[serial_port];
 //	}

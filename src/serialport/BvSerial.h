@@ -40,7 +40,7 @@ enum
 };
 
 
-#define  	UART_PORT_NUM 5
+#define  	UART_PORT_NUM 6
 
 #define		ID_Open_Serial_Send		1
 #define		ID_Close_Serial_Send	2
@@ -219,7 +219,7 @@ extern int set_opt(int fd,int wSpeed, int wBits, char cEvent, int wStop);
 extern int bv_uart_open(int uart_port,int baud_rate);
 extern void bv_uart_close(int uart_port);
 extern int bv_uart_read(int uart_port, char* p_data_buf,int buf_size);
-extern int bv_uart_write(int uart_port, char* p_data_buf,int buf_size);
+extern int bv_uart_write(int uart_port, unsigned char *p_data_buf, int buf_size);
 extern void* bv_uart_thread(void *data);
 
 #endif

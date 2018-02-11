@@ -36,7 +36,7 @@
 
 #include <QTimer>
 #include <QDebug>
-
+#include <QFile>
 #include <iostream>
 
 using namespace std;

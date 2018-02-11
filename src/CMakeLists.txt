@@ -1,6 +1,6 @@
 set(exec_name ${PROJECT_NAME})
 
-set (CMAKE_PREFIX_PATH "C:/Qt/Qt5.10.0/5.10.0/mingw53_32")
+set (CMAKE_PREFIX_PATH "/opt/Qt5.6.1/5.6/gcc_64")
 find_package(Qt5 REQUIRED COMPONENTS Widgets SerialPort)
 set(QT_LIBRARIES Qt5::Widgets Qt5::SerialPort)
 
@@ -19,7 +19,7 @@ set(baseic_srcs
         enums.h
         devicedescriptorstruct.h
         )
-set(moc_files mainwindow.h
+set(moc_files #mainwindow.h
         #serialportconnection.h
         uploaderwidget.h
         devicewidget.h

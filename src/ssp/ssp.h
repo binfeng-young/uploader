@@ -54,7 +54,7 @@ typedef struct {
     uint16_t length;
     uint16_t crc;
     uint8_t  seqNo;
-} Packet_t;
+} Packet;
 
 typedef struct {
     uint8_t  *rxBuf;                                 // Buffer used to store rcv data

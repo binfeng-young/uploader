@@ -60,6 +60,7 @@ DFUObject::DFUObject(bool _debug, bool _use_serial, QString portname) :
         info->max_retry  = 10;
         info->timeoutLen = 1000;
         if (info->status() != port::open) {
+            info->deleteLater();
             cout << "Could not open serial port\n";
             mready = false;
             return;

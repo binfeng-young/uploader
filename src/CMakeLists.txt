@@ -4,14 +4,15 @@ set (CMAKE_PREFIX_PATH "C:/Qt/Qt5.10.0/5.10.0/mingw53_32")
 find_package(Qt5 REQUIRED COMPONENTS Widgets SerialPort)
 set(QT_LIBRARIES Qt5::Widgets Qt5::SerialPort)
 
-include_directories(ssp dfu)
+include_directories(ssp qssp dfu)
 
 add_subdirectory(ssp)
+add_subdirectory(qssp)
 add_subdirectory(dfu)
 set(baseic_srcs
         main.cpp
-        mainwindow.cpp
-        serialdevice.cpp
+        #mainwindow.cpp
+        #serialportconnection.cpp
         devicewidget.cpp
         uploaderwidget.cpp
         #rebootdialog.cpp
@@ -19,12 +20,12 @@ set(baseic_srcs
         devicedescriptorstruct.h
         )
 set(moc_files mainwindow.h
-        serialdevice.h
+        #serialportconnection.h
         uploaderwidget.h
         devicewidget.h
         #rebootdialog.h
         )
-set(uic_files mainwindow.ui
+set(uic_files #mainwindow.ui
         uploader.ui
         devicewidget.ui
         #rebootdialog.ui

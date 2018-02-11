@@ -2,7 +2,7 @@
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "serialdevice.h"
+#include "serialportconnection.h"
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow) {
@@ -13,7 +13,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->rescueButton, SIGNAL(clicked()), this, SLOT(onRescue()));
     connect(ui->refreshPorts, SIGNAL(clicked()), this, SLOT(onRefresh()));
 
-    m_serialDevice = new SerialDevice();
+    m_serialDevice = new SerialPortConnection();
     m_portStatus = PortStatus::closed;
     ui->openButton->setText(tr("connect"));
     ui->sendButton->setDisabled(true);

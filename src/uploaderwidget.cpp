@@ -928,6 +928,7 @@ void UploaderWidget::systemRescue()
     // Check if boards are connected and, if yes, prompt user to disconnect them all
     if(devName != "USB") {
         m_dfu = new DFUObject(DFU_DEBUG, true, devName);
+        m_dfu->syncSerialPort();
         if (!m_dfu->ready()){
             this->setEnabled(true);
             log("not ready");

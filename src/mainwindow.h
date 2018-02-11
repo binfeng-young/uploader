@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include <QtSerialPort/QSerialPortInfo>
-class SerialDevice;
+class SerialPortConnection;
 
 namespace Ui {
     class MainWindow;
@@ -34,7 +34,7 @@ public slots:
 
 private:
     Ui::MainWindow *ui;
-    SerialDevice *m_serialDevice;
+    SerialPortConnection *m_serialDevice;
     PortStatus m_portStatus;
 
 };

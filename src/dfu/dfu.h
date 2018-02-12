@@ -40,7 +40,7 @@
 #define BUF_LEN             64
 
 // serial
-class qsspt;
+class sspt;
 
 // usb
 //class opHID_hidapi;
@@ -192,7 +192,7 @@ private:
     int RWFlags;
 
     // Serial
-    qsspt *serialhandle;
+    sspt *serialhandle;
 
     // USB
     // opHID_hidapi *hidHandle;

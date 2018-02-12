@@ -7,25 +7,22 @@ set(QT_LIBRARIES Qt5::Widgets Qt5::SerialPort)
 include_directories(serialport ssp qssp dfu)
 add_subdirectory(serialport)
 add_subdirectory(ssp)
-add_subdirectory(qssp)
+#add_subdirectory(qssp)
 add_subdirectory(dfu)
 set(baseic_srcs
         main.cpp
-        #mainwindow.cpp
-        #serialportconnection.cpp
         devicewidget.cpp
         uploaderwidget.cpp
         #rebootdialog.cpp
         enums.h
         devicedescriptorstruct.h
         )
-set(moc_files #mainwindow.h
-        #serialportconnection.h
+set(moc_files
         uploaderwidget.h
         devicewidget.h
         #rebootdialog.h
         )
-set(uic_files #mainwindow.ui
+set(uic_files
         uploader.ui
         devicewidget.ui
         #rebootdialog.ui

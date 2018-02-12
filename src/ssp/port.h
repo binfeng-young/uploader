@@ -1,54 +1,26 @@
-/**
- ******************************************************************************
- *
- * @file       port.h
- * @author     The LibrePilot Project, http://www.librepilot.org Copyright (C) 2017.
- *             The OpenPilot Team, http://www.openpilot.org Copyright (C) 2010.
- * @addtogroup GCSPlugins GCS Plugins
- * @{
- * @addtogroup Uploader Serial and USB Uploader Plugin
- * @{
- * @brief The USB and Serial protocol uploader plugin
- *****************************************************************************/
-/*
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- */
 #ifndef PORT_H
 #define PORT_H
 
 #include "common.h"
 
-#include <QObject>
-#include <QTime>
-
 #include <stdint.h>
+#include <string>
+#include <chrono>
 
-class QSerialPort;
+class SerialPort;
 
-class port : public QObject {
+class port {
 
 public:
     enum portstatus { open, closed, error };
 
-    port(const QString &name, bool debug);
+    port(const std::string &name, bool debug);
     virtual ~port();
     portstatus status();
 
-    virtual int16_t pfSerialRead(void); // function to read a character from the serial input stream
+    virtual int16_t pfSerialRead(); // function to read a character from the serial input stream
     virtual void pfSerialWrite(uint8_t); // function to write a byte to be sent out the serial port
-    virtual uint32_t pfGetTime(void);
+    virtual uint32_t pfGetTime();
 
     uint8_t retryCount; // how many times have we tried to transmit the 'send' packet
     uint8_t maxRetryCount; // max. times to try to transmit the 'send' packet
@@ -78,12 +50,12 @@ public:
 
 private:
     portstatus mstatus;
-    QTime timer;
-    QSerialPort *sport;
+    std::chrono::high_resolution_clock::time_point start;
+    SerialPort *sport;
 
     bool debug;
-    QByteArray rxDebugBuff;
-    QByteArray txDebugBuff;
+//    QByteArray rxDebugBuff;
+//    QByteArray txDebugBuff;
 };
 
 #endif // PORT_H

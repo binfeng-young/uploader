@@ -28,7 +28,7 @@
 #include "dfu.h"
 
 #include "port.h"
-#include "qsspt.h"
+#include "sspt.h"
 
 // #include <ophid/inc/ophid_hidapi.h>
 // #include <ophid/inc/ophid_usbmon.h>
@@ -38,6 +38,7 @@
 #include <QDebug>
 #include <QFile>
 #include <iostream>
+#include <QtCore/QTime>
 
 using namespace std;
 using namespace DFU;
@@ -52,7 +53,7 @@ DFUObject::DFUObject(bool _debug, bool _use_serial, QString portname) :
     qRegisterMetaType<DFU::Status>("Status");
 
     if (use_serial) {
-        info = new port(portname, false);
+        info = new port(portname.toStdString(), false);
         info->rxBuf      = sspRxBuf;
         info->rxBufSize  = MAX_PACKET_DATA_LEN;
         info->txBuf      = sspTxBuf;
@@ -60,12 +61,13 @@ DFUObject::DFUObject(bool _debug, bool _use_serial, QString portname) :
         info->max_retry  = 10;
         info->timeoutLen = 1000;
         if (info->status() != port::open) {
-            info->deleteLater();
+            delete info;
+            info = nullptr;
             cout << "Could not open serial port\n";
             mready = false;
             return;
         }
-        serialhandle = new qsspt(info, false /*debug*/);
+        serialhandle = new sspt(info, false /*debug*/);
         int count = 0;
         while (!serialhandle->ssp_Synchronise() && (count < 10)) {
             if (debug) {
@@ -80,10 +82,8 @@ DFUObject::DFUObject(bool _debug, bool _use_serial, QString portname) :
         }
 
         // transfer ownership of port to serialhandle thread
-        info->moveToThread(serialhandle);
-        connect(serialhandle, SIGNAL(finished()), info, SLOT(deleteLater()));
         // start the serialhandle thread
-        serialhandle->start();
+        serialhandle->run();
     } else {
 /*
         hidHandle = new opHID_hidapi();
@@ -144,7 +144,6 @@ DFUObject::~DFUObject()
     if (use_serial) {
         if(nullptr != serialhandle) {
             serialhandle->end();
-            serialhandle->wait();
             delete serialhandle;
             serialhandle = nullptr;
         }

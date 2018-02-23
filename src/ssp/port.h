@@ -2,7 +2,7 @@
 #define PORT_H
 
 #include "common.h"
-
+#include "../utils.h"
 #include <stdint.h>
 #include <string>
 #include <chrono>
@@ -50,7 +50,7 @@ public:
 
 private:
     portstatus mstatus;
-    std::chrono::high_resolution_clock::time_point start;
+    Time time;
     SerialPort *sport;
 
     bool debug;

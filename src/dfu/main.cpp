@@ -31,6 +31,7 @@
 #include <QDebug>
 
 #include <iostream>
+#include <QtCore/QFile>
 
 void showProgress(QString status);
 void progressUpdated(int percent);

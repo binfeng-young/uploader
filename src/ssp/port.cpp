@@ -3,7 +3,7 @@
 using namespace std;
 port::port(const string &name, bool debug) : mstatus(port::closed), debug(debug)
 {
-    start = std::chrono::high_resolution_clock::now();
+    time.start();
     sport = new SerialPort();
     if (sport->openPort(name))  {
         mstatus = port::open;
@@ -57,8 +57,5 @@ void port::pfSerialWrite(uint8_t c)
 
 uint32_t port::pfGetTime()
 {
-    auto now = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast< std::chrono::milliseconds>
-            (std::chrono::high_resolution_clock::now() - start);
-    return static_cast<uint32_t>(duration.count());
+    return time.elapsed();
 }

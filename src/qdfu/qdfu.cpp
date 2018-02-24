@@ -25,7 +25,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
-#include "dfu.h"
+#include "qdfu.h"
 
 #include "port.h"
 #include "sspt.h"
@@ -83,7 +83,7 @@ DFUObject::DFUObject(bool _debug, bool _use_serial, QString portname) :
 
         // transfer ownership of port to serialhandle thread
         // start the serialhandle thread
-        serialhandle->run();
+        serialhandle->start();
     } else {
 /*
         hidHandle = new opHID_hidapi();

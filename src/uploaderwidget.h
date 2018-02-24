@@ -32,7 +32,7 @@
 #include <QEventLoop>
 #include <QProgressDialog>
 #include <QTimer>
-#include "dfu.h"
+#include "qdfu.h"
 
 using namespace DFU;
 using namespace uploader;

@@ -27,7 +27,7 @@
  */
 #include "devicewidget.h"
 #include "ui_devicewidget.h"
-#include "dfu.h"
+#include "qdfu.h"
 #include <QFileDialog>
 #include <QDebug>
 #include <QCryptographicHash>

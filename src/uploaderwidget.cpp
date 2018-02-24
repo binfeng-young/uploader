@@ -42,7 +42,7 @@
 //#include <uavtalk/telemetrymanager.h>
 //#include <uavtalk/oplinkmanager.h>
 //#include "rebootdialog.h"
-#include "dfu.h"
+#include "qdfu.h"
 #include <QDesktopServices>
 #include <QMessageBox>
 #include <QProgressBar>

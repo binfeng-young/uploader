@@ -36,7 +36,7 @@
 
 #include <QWidget>
 #include <QByteArray>
-#include "dfu.h"
+#include "qdfu.h"
 
 namespace Ui {
     class deviceWidget;

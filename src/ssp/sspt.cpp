@@ -11,21 +11,19 @@ sspt::~sspt()
 void sspt::run()
 {
     // TODO the loop is non blocking and will spin as fast as the CPU allows
-    m_thread = new std::thread([&]() {
-        while (!endthread) {
-            receivestatus = ssp_ReceiveProcess();
-            sendstatus = ssp_SendProcess();
-            sendbufmutex.lock();
-            if (datapending && receivestatus == SSP_TX_IDLE) {
-                ssp_SendData(mbuf, msize);
-                datapending = false;
-            }
-            sendbufmutex.unlock();
-            if (sendstatus == SSP_TX_ACKED) {
-                sendwait.notify_all();
-            }
+    while (!endthread) {
+        receivestatus = ssp_ReceiveProcess();
+        sendstatus = ssp_SendProcess();
+        sendbufmutex.lock();
+        if (datapending && receivestatus == SSP_TX_IDLE) {
+            ssp_SendData(mbuf, msize);
+            datapending = false;
         }
-    });
+        sendbufmutex.unlock();
+        if (sendstatus == SSP_TX_ACKED) {
+            sendwait.notify_all();
+        }
+    }
 }
 
 bool sspt::sendData(uint8_t *buf, uint16_t size)
@@ -57,7 +55,7 @@ void sspt::pfCallBack(uint8_t *buf, uint16_t size)
 //    if (debug) {
 //        qDebug() << "receive callback" << buf[0] << buf[1] << buf[2] << buf[3] << buf[4] << "queue size=" << queue.count();
 //    }
-    vector<unsigned char > data(buf, buf + size);
+    std::string data(buf, buf + size);
     mutex.lock();
     queue.push(data);
     mutex.unlock();
@@ -75,7 +73,7 @@ int sspt::read_Packet(void *data)
         mutex.unlock();
         return -1;
     }
-    vector<unsigned char > arr = queue.front();
+    std::string arr = queue.front();
     queue.pop();
     std::memcpy(data, (uint8_t *)arr.data(), arr.size());
 //    if (debug) {
@@ -88,7 +86,5 @@ int sspt::read_Packet(void *data)
 void sspt::end()
 {
     endthread = true;
-    if (m_thread->joinable()) {
-        m_thread->join();
-    }
+    waitStop();
 }

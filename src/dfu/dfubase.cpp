@@ -15,7 +15,7 @@
 using namespace std;
 using namespace DFU;
 
-DFUBase::DFUBase(bool _debug, bool _use_serial, std::string portname) :
+DFUBase::DFUBase(bool _debug, bool _use_serial,const std::string& portname) :
         debug(_debug), use_serial(_use_serial), mready(true)
 {
     numberOfDevices = 0;
@@ -127,21 +127,21 @@ DFUBase::~DFUBase()
  */
     }
 }
-//
-//bool DFUObject::SaveByteArrayToFile(std::string const & sfile, const QByteArray &array)
-//{
-//    QFile file(sfile);
-//
-//    if (!file.open(QIODevice::WriteOnly)) {
-//        if (debug) {
-//            //qDebug() << "Can't open file" << sfile;
-//        }
-//        return false;
-//    }
-//    file.write(array);
-//    file.close();
-//    return true;
-//}
+
+bool DFUBase::SaveByteArrayToFile(std::string const & sfile, const std::string &array)
+{
+    ofstream file(sfile);
+
+    if (!file.is_open()) {
+        if (debug) {
+            std::cout << "Can't open file" << sfile << std::endl;
+        }
+        return false;
+    }
+    file.write(array.c_str(), sizeof(char)*array.length());
+    file.close();
+    return true;
+}
 
 /**
    Tells the mainboard to enter DFU Mode.
@@ -221,7 +221,7 @@ bool DFUBase::StartUpload(int32_t const & numberOfBytes, TransferTypes const & t
    Does the actual data upload to the board. Needs to be called once the
    board is ready to accept data following a StartUpload command, and it is erased.
  */
-bool DFUBase::UploadData(int32_t const & numberOfBytes, const ByteArray & data)
+bool DFUBase::UploadData(int32_t const & numberOfBytes, const std::string & data)
 {
     int lastPacketCount;
     int32_t numberOfPackets = numberOfBytes / 4 / 14;
@@ -334,66 +334,39 @@ DFU::Status DFUBase::UploadDescription(const std::string& desc)
  */
 std::string DFUBase::DownloadDescription(int const & numberOfChars)
 {
-    ByteArray arr;
+    std::string arr;
 
-    StartDownloadT(&arr, numberOfChars, DFU::Descript);
+    StartDownloadT(arr, numberOfChars, DFU::Descript);
     ulong index = arr.find((char)255, 0);
     return std::string((index == std::string::npos) ? arr : arr.substr(0, index));
 }
 
-//ByteArray DFUObject::DownloadDescriptionAsBA(int const & numberOfChars)
-//{
-//    ByteArray arr;
-//
-//    StartDownloadT(&arr, numberOfChars, DFU::Descript);
-//
-//    return arr;
-//}
+std::string DFUBase::DownloadDescriptionAsBA(int const & numberOfChars)
+{
+    std::string arr;
+
+    StartDownloadT(arr, numberOfChars, DFU::Descript);
+
+    return arr;
+}
 
 /**
    Starts a firmware download
    @param firmwareArray: pointer to the location where we should store the firmware
    @package device: the device to use for the download
  */
-bool DFUBase::DownloadFirmware(ByteArray *firmwareArray, int device)
+std::string DFUBase::DownloadFirmware(int sizeOfCode)
 {
-    if (isRunning()) {
-        return false;
-    }
-    requestedOperation  = DFU::Download;
-    requestSize = devices[device].SizeOfCode;
-    requestTransferType = DFU::FW;
-    requestStorage = firmwareArray;
-    start();
-    return true;
-}
-
-/**
-   Runs the upload or download operations.
- */
-void DFUBase::run()
-{
-    switch (requestedOperation) {
-        case DFU::Download:
-            StartDownloadT(requestStorage, requestSize, requestTransferType);
-            //emit(downloadFinished());
-            break;
-        case DFU::Upload:
-        {
-            DFU::Status ret = UploadFirmwareT(requestFilename, requestVerify, requestDevice);
-            //emit(uploadFinished(ret));
-            break;
-        }
-        default:
-            break;
-    }
+    std::string arr;
+    StartDownloadT(arr, sizeOfCode, DFU::FW);
+    return arr;
 }
 
 /**
    Downloads a certain number of bytes from a certain location, and stores in an array whose
    pointer is passed as an argument
  */
-bool DFUBase::StartDownloadT(ByteArray *fw, int32_t const & numberOfBytes, TransferTypes const & type)
+bool DFUBase::StartDownloadT(std::string &fw, int32_t const & numberOfBytes, TransferTypes const & type)
 {
     int lastPacketCount;
 
@@ -446,7 +419,7 @@ bool DFUBase::StartDownloadT(ByteArray *fw, int32_t const & numberOfBytes, Trans
         } else {
             size = 14 * 4;
         }
-        fw->append(buf + 6, size);
+        fw.append(buf + 6, size);
     }
 
     StatusRequest();
@@ -710,20 +683,8 @@ bool DFUBase::EndOperation()
 /**
    Starts a firmware upload (asynchronous)
  */
-bool DFUBase::UploadFirmware(const std::string &sfile, const bool &verify, int device)
-{
-    if (isRunning()) {
-        return false;
-    }
-    requestedOperation = DFU::Upload;
-    requestFilename    = sfile;
-    requestDevice = device;
-    requestVerify = verify;
-    start();
-    return true;
-}
 
-DFU::Status DFUBase::UploadFirmwareT(const std::string &sfile, const bool &verify, int device)
+DFU::Status DFUBase::UploadFirmware(const std::string &sfile, const bool &verify, int device)
 {
     DFU::Status ret;
 
@@ -739,7 +700,7 @@ DFU::Status DFUBase::UploadFirmwareT(const std::string &sfile, const bool &verif
     }
     std::stringstream streambuf;
     streambuf << file.rdbuf();
-    ByteArray arr(streambuf.str());
+    std::string arr(streambuf.str());
 
     if (debug) {
         //qDebug() << "Bytes Loaded=" << arr.length();
@@ -749,7 +710,7 @@ DFU::Status DFUBase::UploadFirmwareT(const std::string &sfile, const bool &verif
         ++pad;
         pad = pad * 4;
         pad = pad - arr.size();
-        arr.append(ByteArray(pad, (char)255));
+        arr.append(std::string(pad, (char)255));
     }
     if (devices[device].SizeOfCode < (uint32_t)arr.size()) {
         if (debug) {
@@ -819,8 +780,8 @@ DFU::Status DFUBase::UploadFirmwareT(const std::string &sfile, const bool &verif
     if (verify) {
         //emit operationProgress("Verifying firmware");
         cout << "Starting code verification\n";
-        ByteArray arr2;
-        StartDownloadT(&arr2, arr.size(), DFU::FW);
+        std::string arr2;
+        StartDownloadT(arr2, arr.size(), DFU::FW);
         if (arr != arr2) {
             cout << "Verify:FAILED\n";
             return DFU::abort;
@@ -834,47 +795,48 @@ DFU::Status DFUBase::UploadFirmwareT(const std::string &sfile, const bool &verif
     return ret;
 }
 
-//DFU::Status DFUObject::CompareFirmware(const QString &sfile, const CompareType &type, int device)
-//{
-//    cout << "Starting Firmware Compare...\n";
-//    QFile file(sfile);
-//    if (!file.open(QIODevice::ReadOnly)) {
-//        if (debug) {
-//            qDebug() << "Cant open file";
-//        }
-//        return DFU::abort;
-//    }
-//    QByteArray arr = file.readAll();
-//
-//    if (debug) {
-//        qDebug() << "Bytes Loaded=" << arr.length();
-//    }
-//    if (arr.length() % 4 != 0) {
-//        int pad = arr.length() / 4;
-//        ++pad;
-//        pad = pad * 4;
-//        pad = pad - arr.length();
-//        arr.append(QByteArray(pad, (char)255));
-//    }
-//    if (type == DFU::crccompare) {
-//        uint32 crc = DFUObject::CRCFromQBArray(arr, devices[device].SizeOfCode);
-//        if (crc == devices[device].FW_CRC) {
-//            cout << "Compare Successfull CRC MATCH!\n";
-//        } else {
-//            cout << "Compare failed CRC DONT MATCH!\n";
-//        }
-//        return StatusRequest();
-//    } else {
-//        ByteArray arr2;
-//        StartDownloadT(&arr2, arr.length(), DFU::FW);
-//        if (arr == arr2) {
-//            cout << "Compare Successfull ALL Bytes MATCH!\n";
-//        } else {
-//            cout << "Compare failed Bytes DONT MATCH!\n";
-//        }
-//        return StatusRequest();
-//    }
-//}
+DFU::Status DFUBase::CompareFirmware(const std::string &sfile, const CompareType &type, int device)
+{
+    cout << "Starting Firmware Compare...\n";
+    ifstream file(sfile);
+    if (!file.is_open()) {
+        if (debug) {
+            std::cout << "Cant open file" << std::endl;
+        }
+        return DFU::abort;
+    }
+    std::stringstream streambuf;
+    streambuf << file.rdbuf();
+    std::string arr(streambuf.str());
+    if (debug) {
+        std::cout  << "Bytes Loaded=" << arr.length() << std::endl;
+    }
+    if (arr.length() % 4 != 0) {
+        int pad = arr.length() / 4;
+        ++pad;
+        pad = pad * 4;
+        pad = pad - arr.length();
+        arr.append(std::string(pad, (char)255));
+    }
+    if (type == DFU::crccompare) {
+        uint32_t crc = DFUBase::CRCFromQBArray(arr, devices[device].SizeOfCode);
+        if (crc == devices[device].FW_CRC) {
+            cout << "Compare Successfull CRC MATCH!\n";
+        } else {
+            cout << "Compare failed CRC DONT MATCH!\n";
+        }
+        return StatusRequest();
+    } else {
+        std::string arr2;
+        StartDownloadT(arr2, arr.length(), DFU::FW);
+        if (arr == arr2) {
+            cout << "Compare Successfull ALL Bytes MATCH!\n";
+        } else {
+            cout << "Compare failed Bytes DONT MATCH!\n";
+        }
+        return StatusRequest();
+    }
+}
 
 void DFUBase::CopyWords(char *source, char *destination, int count)
 {
@@ -943,7 +905,6 @@ std::string DFUBase::StatusToString(DFU::Status const & status)
  */
 void DFUBase::printProgBar(int const & percent, std::string const & label)
 {
-
     if (debug) {
         std::string bar;
         for (int i = 0; i < 50; i++) {
@@ -998,11 +959,11 @@ uint32_t DFUBase::CRC32WideFast(uint32_t Crc, uint32_t Size, uint32_t *Buffer)
 /**
    Utility function
  */
-uint32_t DFUBase::CRCFromQBArray(ByteArray array, uint32_t Size)
+uint32_t DFUBase::CRCFromQBArray(std::string array, uint32_t Size)
 {
     uint32_t pad = Size - array.length();
 
-    array.append(ByteArray(pad, (char)255));
+    array.append(std::string(pad, (char)255));
     int num_words = Size / 4;
     uint32_t *t    = (uint32_t *)malloc(Size);
     for (int x = 0; x < num_words; x++) {

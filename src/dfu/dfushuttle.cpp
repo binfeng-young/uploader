@@ -65,10 +65,6 @@ int main(int argc, char *argv[]) {
         std::cout << "Upload failed with code:" << retstatus << std::endl;
         return -1;
     }
-    while (dfu.isRunning()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    }
-    dfu.waitStop();
     // TODO check if upload went well...
 //    if (filePath.endsWith("opfw")) {
     std::ifstream fwfile(filePath);
@@ -94,9 +90,6 @@ int main(int argc, char *argv[]) {
 //            return -1;
 //        }
     //   }
-    while (dfu.isRunning()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    }
     std::cout << "Uploading Succeeded!\n" << std::endl;
     return 0;
 }

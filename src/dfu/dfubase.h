@@ -1,5 +1,5 @@
 //
-// Created by root on 2/23/18.
+// Created by bfyoung on 2/23/18.
 //
 
 #ifndef UPLOADER_DFUBASE_H
@@ -20,8 +20,6 @@ class sspt;
 
 // usb
 //class opHID_hidapi;
-
-typedef std::string ByteArray;
 
 namespace DFU {
     enum TransferTypes {
@@ -99,12 +97,11 @@ namespace DFU {
         bool    Writable;
     };
 
-    class DFUBase : public Thread {
-
+    class DFUBase {
     public:
-        static uint32_t CRCFromQBArray(ByteArray array, uint32_t Size);
+        static uint32_t CRCFromQBArray(std::string array, uint32_t Size);
 
-        DFUBase(bool debug, bool use_serial, std::string port);
+        DFUBase(bool debug, bool use_serial,const std::string& port);
 
         virtual ~DFUBase();
 
@@ -123,21 +120,21 @@ namespace DFU {
 
         // Upload (send to device) commands
         DFU::Status UploadDescription(const std::string& desc);
-        bool UploadFirmware(const std::string &sfile, const bool &verify, int device);
+        DFU::Status UploadFirmware(const std::string &sfile, const bool &verify, int device);
 
         // Download (get from device) commands:
         // DownloadDescription is synchronous
         std::string DownloadDescription(int const & numberOfChars);
-        //ByteArray DownloadDescriptionAsBA(int const & numberOfChars);
+        std::string DownloadDescriptionAsBA(int const & numberOfChars);
         // Asynchronous firmware download: initiates fw download,
         // and a downloadFinished signal is emitted when download
         // if finished:
-        bool DownloadFirmware(ByteArray *byteArray, int device);
+        std::string DownloadFirmware(int sizeOfCode);
 
         // Comparison functions (is this needed?)
-        //DFU::Status CompareFirmware(const std::string &sfile, const CompareType &type, int device);
+        DFU::Status CompareFirmware(const std::string &sfile, const CompareType &type, int device);
 
-        //bool SaveByteArrayToFile(std::string const & file, ByteArray const &array);
+        bool SaveByteArrayToFile(std::string const & file, std::string const &array);
 
         // Variables:
         std::vector<device> devices;
@@ -149,7 +146,7 @@ namespace DFU {
         std::string StatusToString(DFU::Status const & status);
         static uint32_t CRC32WideFast(uint32_t Crc, uint32_t Size, uint32_t *Buffer);
         DFU::eBoardType GetBoardType(int boardNum);
-
+        void printProgBar(int const & percent, std::string const & label);
     private:
         // Generic variables:
         bool debug;
@@ -174,25 +171,12 @@ namespace DFU {
         }
 
         void CopyWords(char *source, char *destination, int count);
-        void printProgBar(int const & percent, std::string const & label);
         bool StartUpload(int32_t const &numberOfBytes, TransferTypes const & type, uint32_t crc);
-        bool UploadData(int32_t const & numberOfPackets, const ByteArray & data);
+        bool UploadData(int32_t const & numberOfPackets, const std::string & data);
 
         // Thread management:
         // Same as startDownload except that we store in an external array:
-        bool StartDownloadT(ByteArray *fw, int32_t const & numberOfBytes, TransferTypes const & type);
-        DFU::Status UploadFirmwareT(const std::string &sfile, const bool &verify, int device);
-        std::mutex mutex;
-        DFU::Commands requestedOperation;
-        int32_t requestSize;
-        DFU::TransferTypes requestTransferType;
-        ByteArray *requestStorage;
-        std::string requestFilename;
-        bool requestVerify;
-        int requestDevice;
-
-    protected:
-        void run(); // Executes the upload or download operations
+        bool StartDownloadT(std::string &fw, int32_t const & numberOfBytes, TransferTypes const & type);
     };
 }
 

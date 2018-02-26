@@ -4,14 +4,10 @@
 
 #include "serialport.h"
 #include <cstring>
-#include <string>
-extern "C"{
-#include <stdbool.h>
+extern "C" {
 #include <termios.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <stdio.h>
-#include <sys/select.h>
 }
 
 SerialPort::SerialPort() : m_fd(-1){
@@ -164,7 +160,7 @@ bool SerialPort::openPort(const std::string & deviceName)
         printf("set_opt  err!\n");
         return false;
     }
-
+    printf("opened\n");
     return true;
 }
 
@@ -178,14 +174,14 @@ void SerialPort::closePort()
 int SerialPort::readBuff(char *p_data_buf, int buf_size) {
     int recvlen = 0;
     fd_set fs_read;
-    timeval time {0, 1000};
+    timeval time {0, 10};
     char* data_buf = p_data_buf;
     FD_ZERO(&fs_read);
     FD_SET(m_fd, &fs_read);
 
     /*使用select实现串口的多路通信*/
-    //int fs_sel = select(m_fd + 1, &fs_read, NULL, NULL, &time);
-    //if (fs_sel) {
+    int fs_sel = select(m_fd + 1, &fs_read, NULL, NULL, &time);
+    if (fs_sel) {
         while(1) {
             int len = read(m_fd, data_buf, buf_size);
             if (len > 0) {
@@ -198,12 +194,12 @@ int SerialPort::readBuff(char *p_data_buf, int buf_size) {
             if (len >= buf_size) break;
         }
         //printf("%d\n", recvlen);
-    //}
-    //else
-    //{
-       // printf("uart read time out\n.");
-     //   recvlen = -1;
-   // }
+    }
+    else
+    {
+        //printf("uart read time out\n.");
+        recvlen = -1;
+    }
 
     return recvlen;
 }

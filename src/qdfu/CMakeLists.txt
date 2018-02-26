@@ -11,4 +11,4 @@ target_link_libraries(qdfu ssp ${QT_LIBRARIES})
 
 add_executable(dfu_cmd main.cpp)
 
-target_link_libraries(dfu_cmd dfu)
+target_link_libraries(dfu_cmd qdfu)

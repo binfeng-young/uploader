@@ -6,7 +6,6 @@
 #define UPLOADER_DFUBASE_H
 
 #include <vector>
-#include <tiff.h>
 #include <string>
 #include <mutex>
 #include "../utils.h"
@@ -91,11 +90,11 @@ namespace DFU {
     };
 
     struct device {
-        uint16 ID;
-        uint32 FW_CRC;
-        uint8  BL_Version;
+        uint16_t ID;
+        uint32_t FW_CRC;
+        uint8_t  BL_Version;
         int     SizeOfDesc;
-        uint32 SizeOfCode;
+        uint32_t SizeOfCode;
         bool    Readable;
         bool    Writable;
     };
@@ -103,7 +102,7 @@ namespace DFU {
     class DFUBase : public Thread {
 
     public:
-        static uint32 CRCFromQBArray(ByteArray array, uint32 Size);
+        static uint32_t CRCFromQBArray(ByteArray array, uint32_t Size);
 
         DFUBase(bool debug, bool use_serial, std::string port);
 
@@ -148,7 +147,7 @@ namespace DFU {
 
         // Helper functions:
         std::string StatusToString(DFU::Status const & status);
-        static uint32 CRC32WideFast(uint32 Crc, uint32 Size, uint32 *Buffer);
+        static uint32_t CRC32WideFast(uint32_t Crc, uint32_t Size, uint32_t *Buffer);
         DFU::eBoardType GetBoardType(int boardNum);
 
     private:
@@ -176,16 +175,16 @@ namespace DFU {
 
         void CopyWords(char *source, char *destination, int count);
         void printProgBar(int const & percent, std::string const & label);
-        bool StartUpload(int32 const &numberOfBytes, TransferTypes const & type, uint32 crc);
-        bool UploadData(int32 const & numberOfPackets, const ByteArray & data);
+        bool StartUpload(int32_t const &numberOfBytes, TransferTypes const & type, uint32_t crc);
+        bool UploadData(int32_t const & numberOfPackets, const ByteArray & data);
 
         // Thread management:
         // Same as startDownload except that we store in an external array:
-        bool StartDownloadT(ByteArray *fw, int32 const & numberOfBytes, TransferTypes const & type);
+        bool StartDownloadT(ByteArray *fw, int32_t const & numberOfBytes, TransferTypes const & type);
         DFU::Status UploadFirmwareT(const std::string &sfile, const bool &verify, int device);
         std::mutex mutex;
         DFU::Commands requestedOperation;
-        int32 requestSize;
+        int32_t requestSize;
         DFU::TransferTypes requestTransferType;
         ByteArray *requestStorage;
         std::string requestFilename;

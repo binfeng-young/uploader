@@ -3,17 +3,14 @@
 //
 
 #include "dfubase.h"
-
 #include "port.h"
 #include "sspt.h"
+#include <fstream>
+#include <sstream>
 
 // #include <ophid/inc/ophid_hidapi.h>
 // #include <ophid/inc/ophid_usbmon.h>
 // #include <ophid/inc/ophid_usbsignal.h>
-
-#include <iostream>
-#include <fstream>
-#include <sstream>
 
 using namespace std;
 using namespace DFU;
@@ -42,18 +39,18 @@ DFUBase::DFUBase(bool _debug, bool _use_serial, std::string portname) :
         }
         serialhandle = new sspt(info, false /*debug*/);
         int count = 0;
-        while (!serialhandle->ssp_Synchronise() && (count < 10)) {
+        std::cout << "sync...." << std::endl;
+        while (!serialhandle->ssp_Synchronise() && (count++ < 10)) {
             if (debug) {
-                //qDebug() << "SYNC failed, resending...";
+                std::cout << "SYNC failed, resending..." << std::endl;
             }
-            count++;
         }
         if (count == 10) {
             mready = false;
-            //qDebug() << "SYNC failed";
+            std::cout << "SYNC failed" << std::endl;
             return;
         }
-
+        std::cout << "SYNC success" << std::endl;
         // transfer ownership of port to serialhandle thread
         // start the serialhandle thread
         serialhandle->start();
@@ -179,10 +176,10 @@ bool DFUBase::enterDFU(int const &devNumber)
    erase the memory to make room for the data. You will have to query
    its status to wait until erase is done before doing the actual upload.
  */
-bool DFUBase::StartUpload(int32 const & numberOfBytes, TransferTypes const & type, uint32 crc)
+bool DFUBase::StartUpload(int32_t const & numberOfBytes, TransferTypes const & type, uint32_t crc)
 {
     int lastPacketCount;
-    int32 numberOfPackets = numberOfBytes / 4 / 14;
+    int32_t numberOfPackets = numberOfBytes / 4 / 14;
     int pad = (numberOfBytes - numberOfPackets * 4 * 14) / 4;
 
     if (pad == 0) {
@@ -224,10 +221,10 @@ bool DFUBase::StartUpload(int32 const & numberOfBytes, TransferTypes const & typ
    Does the actual data upload to the board. Needs to be called once the
    board is ready to accept data following a StartUpload command, and it is erased.
  */
-bool DFUBase::UploadData(int32 const & numberOfBytes, const ByteArray & data)
+bool DFUBase::UploadData(int32_t const & numberOfBytes, const ByteArray & data)
 {
     int lastPacketCount;
-    int32 numberOfPackets = numberOfBytes / 4 / 14;
+    int32_t numberOfPackets = numberOfBytes / 4 / 14;
     int pad = (numberOfBytes - numberOfPackets * 4 * 14) / 4;
 
     if (pad == 0) {
@@ -245,7 +242,7 @@ bool DFUBase::UploadData(int32 const & numberOfBytes, const ByteArray & data)
     int packetsize;
     float percentage;
     int laspercentage = 0;
-    for (int32 packetcount = 0; packetcount < numberOfPackets; ++packetcount) {
+    for (int32_t packetcount = 0; packetcount < numberOfPackets; ++packetcount) {
         percentage = (float)(packetcount + 1) / numberOfPackets * 100;
         if (laspercentage != (int)percentage) {
             printProgBar((int)percentage, "UPLOADING");
@@ -396,12 +393,12 @@ void DFUBase::run()
    Downloads a certain number of bytes from a certain location, and stores in an array whose
    pointer is passed as an argument
  */
-bool DFUBase::StartDownloadT(ByteArray *fw, int32 const & numberOfBytes, TransferTypes const & type)
+bool DFUBase::StartDownloadT(ByteArray *fw, int32_t const & numberOfBytes, TransferTypes const & type)
 {
     int lastPacketCount;
 
     // First of all, work out the number of DFU packets we should ask for:
-    int32 numberOfPackets = numberOfBytes / 4 / 14;
+    int32_t numberOfPackets = numberOfBytes / 4 / 14;
     int pad = (numberOfBytes - numberOfPackets * 4 * 14) / 4;
 
     if (pad == 0) {
@@ -432,7 +429,7 @@ bool DFUBase::StartDownloadT(ByteArray *fw, int32 const & numberOfBytes, Transfe
     int laspercentage = 0;
 
     // Now get those packets:
-    for (int32 x = 0; x < numberOfPackets; ++x) {
+    for (int32_t x = 0; x < numberOfPackets; ++x) {
         int size;
         percentage = (float)(x + 1) / numberOfPackets * 100;
         if (laspercentage != (int)percentage) {
@@ -649,23 +646,23 @@ bool DFUBase::findDevices()
             sendData(buf, BUF_LEN);
             receiveData(buf, BUF_LEN);
             devices[x].ID = buf[14];
-            devices[x].ID = devices[x].ID << 8 | (uint8)buf[15];
+            devices[x].ID = devices[x].ID << 8 | (uint8_t)buf[15];
             devices[x].BL_Version = buf[7];
             devices[x].SizeOfDesc = buf[8];
 
-            uint32 aux;
-            aux = (uint8)buf[10];
-            aux = aux << 8 | (uint8)buf[11];
-            aux = aux << 8 | (uint8)buf[12];
-            aux = aux << 8 | (uint8)buf[13];
+            uint32_t aux;
+            aux = (uint8_t)buf[10];
+            aux = aux << 8 | (uint8_t)buf[11];
+            aux = aux << 8 | (uint8_t)buf[12];
+            aux = aux << 8 | (uint8_t)buf[13];
 
             devices[x].FW_CRC = aux;
 
 
-            aux = (uint8)buf[2];
-            aux = aux << 8 | (uint8)buf[3];
-            aux = aux << 8 | (uint8)buf[4];
-            aux = aux << 8 | (uint8)buf[5];
+            aux = (uint8_t)buf[2];
+            aux = aux << 8 | (uint8_t)buf[3];
+            aux = aux << 8 | (uint8_t)buf[4];
+            aux = aux << 8 | (uint8_t)buf[5];
             devices[x].SizeOfCode = aux;
         }
 //        if (debug) {
@@ -754,14 +751,14 @@ DFU::Status DFUBase::UploadFirmwareT(const std::string &sfile, const bool &verif
         pad = pad - arr.size();
         arr.append(ByteArray(pad, (char)255));
     }
-    if (devices[device].SizeOfCode < (uint32)arr.size()) {
+    if (devices[device].SizeOfCode < (uint32_t)arr.size()) {
         if (debug) {
             //qDebug() << "ERROR file to big for device";
         }
         return DFU::abort;;
     }
 
-    uint32 crc = DFUBase::CRCFromQBArray(arr, devices[device].SizeOfCode);
+    uint32_t crc = DFUBase::CRCFromQBArray(arr, devices[device].SizeOfCode);
     if (debug) {
         //qDebug() << "NEW FIRMWARE CRC=" << crc;
     }
@@ -968,18 +965,18 @@ void DFUBase::printProgBar(int const & percent, std::string const & label)
 /**
    Utility function
  */
-uint32 DFUBase::CRC32WideFast(uint32 Crc, uint32 Size, uint32 *Buffer)
+uint32_t DFUBase::CRC32WideFast(uint32_t Crc, uint32_t Size, uint32_t *Buffer)
 {
     // Size = Size >> 2; // /4  Size passed in as a byte count, assumed to be a multiple of 4
 
     while (Size--) {
         // Nibble lookup table for 0x04C11DB7 polynomial
-        static const uint32 CrcTable[16] = {
+        static const uint32_t CrcTable[16] = {
                 0x00000000, 0x04C11DB7, 0x09823B6E, 0x0D4326D9, 0x130476DC, 0x17C56B6B, 0x1A864DB2, 0x1E475005,
                 0x2608EDB8, 0x22C9F00F, 0x2F8AD6D6, 0x2B4BCB61, 0x350C9B64, 0x31CD86D3, 0x3C8EA00A, 0x384FBDBD
         };
 
-        Crc     = Crc ^ *((uint32 *)Buffer); // Apply all 32-bits
+        Crc     = Crc ^ *((uint32_t *)Buffer); // Apply all 32-bits
 
         Buffer += 1;
 
@@ -1001,15 +998,15 @@ uint32 DFUBase::CRC32WideFast(uint32 Crc, uint32 Size, uint32 *Buffer)
 /**
    Utility function
  */
-uint32 DFUBase::CRCFromQBArray(ByteArray array, uint32 Size)
+uint32_t DFUBase::CRCFromQBArray(ByteArray array, uint32_t Size)
 {
-    uint32 pad = Size - array.length();
+    uint32_t pad = Size - array.length();
 
     array.append(ByteArray(pad, (char)255));
     int num_words = Size / 4;
-    uint32 *t    = (uint32 *)malloc(Size);
+    uint32_t *t    = (uint32_t *)malloc(Size);
     for (int x = 0; x < num_words; x++) {
-        uint32 aux = 0;
+        uint32_t aux = 0;
         aux  = (char)array[x * 4 + 3] & 0xFF;
         aux  = aux << 8;
         aux += (char)array[x * 4 + 2] & 0xFF;
@@ -1019,7 +1016,7 @@ uint32 DFUBase::CRCFromQBArray(ByteArray array, uint32 Size)
         aux += (char)array[x * 4 + 0] & 0xFF;
         t[x] = aux;
     }
-    uint32 ret = DFUBase::CRC32WideFast(0xFFFFFFFF, num_words, t);
+    uint32_t ret = DFUBase::CRC32WideFast(0xFFFFFFFF, num_words, t);
     free(t);
 
     return ret;

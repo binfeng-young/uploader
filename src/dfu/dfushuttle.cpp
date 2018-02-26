@@ -11,11 +11,12 @@
 
 int main(int argc, char *argv[]) {
     bool debug = false;
-    std::string filePath = "/home/binfeng/Desktop/fw_hx_v200.opfw";
-    DFU::DFUBase dfu(true, true, "ttyUSB0");
+    std::string filePath = "D:/workspace/Linux/HXsweeper/build/firmware/fw_hx_v200/fw_hx_v200.opfw";
+    DFU::DFUBase dfu(true, true, "ttyS3");
     if (!dfu.ready()) {
         return -1;
     }
+    std::cout << "ready" << std::endl;
     dfu.AbortOperation();
     if (!dfu.enterDFU(0)) {
         std::cout << "Could not enter DFU mode\n" << std::endl;
@@ -29,28 +30,28 @@ int main(int argc, char *argv[]) {
         std::cout << "Could not detect a board, aborting!" << std::endl;
         return -1;
     }
-//    std::cout << "Found " << qdfu.numberOfDevices << "\n";
-//    for (int x = 0; x < qdfu.numberOfDevices; ++x) {
-//        std::cout << "Device #" << x << "\n";
-//        std::cout << "Device ID=" << qdfu.devices[x].ID << "\n";
-//        std::cout << "Device Readable=" << qdfu.devices[x].Readable << "\n";
-//        std::cout << "Device Writable=" << qdfu.devices[x].Writable << "\n";
-//        std::cout << "Device SizeOfCode=" << qdfu.devices[x].SizeOfCode << "\n";
-//        std::cout << "BL Version=" << qdfu.devices[x].BL_Version << "\n";
-//        std::cout << "Device SizeOfDesc=" << qdfu.devices[x].SizeOfDesc << "\n";
-//        std::cout << "FW CRC=" << qdfu.devices[x].FW_CRC << "\n";
-//
-//        int size = ((DFU::device)qdfu.devices[x]).SizeOfDesc;
-//        qdfu.enterDFU(x);
-//        std::cout << "Description:" << qdfu.DownloadDescription(size).toLatin1().data() << "\n";
-//        std::cout << "\n";
-//    }
+    std::cout << "Found " << dfu.numberOfDevices << "\n";
+    for (int x = 0; x < dfu.numberOfDevices; ++x) {
+        std::cout << "Device #" << x << "\n";
+        std::cout << "Device ID=" << dfu.devices[x].ID << "\n";
+        std::cout << "Device Readable=" << dfu.devices[x].Readable << "\n";
+        std::cout << "Device Writable=" << dfu.devices[x].Writable << "\n";
+        std::cout << "Device SizeOfCode=" << dfu.devices[x].SizeOfCode << "\n";
+        std::cout << "BL Version=" << (uint32_t)dfu.devices[x].BL_Version << "\n";
+        std::cout << "Device SizeOfDesc=" << dfu.devices[x].SizeOfDesc << "\n";
+        std::cout << "FW CRC=" << dfu.devices[x].FW_CRC << "\n";
+
+        int size = ((DFU::device)dfu.devices[x]).SizeOfDesc;
+        dfu.enterDFU(x);
+        std::cout << "Description:" << dfu.DownloadDescription(size) << "\n";
+        std::cout << "\n";
+    }
     int device = 0;
     if (!dfu.enterDFU(device)) {
         std::cout << "Error:Could not enter DFU mode\n" << std::endl;
         return -1;
     }
-    if (((DFU::device) dfu.devices[device]).Writable == false) {
+    if (!dfu.devices[device].Writable) {
         std::cout << "ERROR device not Writable\n" << std::endl;
         return false;
     }

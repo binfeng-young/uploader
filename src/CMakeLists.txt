@@ -1,6 +1,6 @@
 set(exec_name ${PROJECT_NAME})
 
-set (CMAKE_PREFIX_PATH "/opt/Qt5.6.1/5.6/gcc_64")
+set (CMAKE_PREFIX_PATH "C:/cygwin64")
 find_package(Qt5 REQUIRED COMPONENTS Widgets SerialPort)
 set(QT_LIBRARIES Qt5::Widgets Qt5::SerialPort)
 

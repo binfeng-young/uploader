@@ -9,6 +9,7 @@ using namespace DFU;
 
 DFUObject::DFUObject(bool _debug, bool _use_serial, QString portname)
 {
+    qRegisterMetaType<DFU::Status>("Status");
     m_dfuBase = new DFUBase(_debug, _use_serial, portname.toStdString());
 }
 
@@ -37,7 +38,25 @@ DFU::Status DFUObject::UploadDescription(QVariant desc)
     cout << "Starting uploading description\n";
 
     emit operationProgress("Uploading description");
-    return m_dfuBase->UploadDescription(desc.toByteArray().toStdString());
+
+    std::string array;
+    if (desc.type() == QVariant::String) {
+        QString description = desc.toString();
+        if (description.length() % 4 != 0) {
+            int pad = description.length() / 4;
+            pad = (pad + 1) * 4;
+            pad = pad - description.length();
+            QString padding;
+            padding.fill(' ', pad);
+            description.append(padding);
+        }
+        array = description.toLatin1().toStdString();
+    } else if (desc.type() == QVariant::ByteArray) {
+        array = desc.toByteArray().toStdString();
+    }
+
+
+    return m_dfuBase->UploadDescription(array);
 }
 
 QString DFUObject::DownloadDescription(int const & numberOfChars)
@@ -115,7 +134,10 @@ DFU::Status DFUObject::StatusRequest()
 
 bool DFUObject::findDevices()
 {
-    return m_dfuBase->findDevices();
+    bool ret = m_dfuBase->findDevices();
+    numberOfDevices = m_dfuBase->numberOfDevices;
+    devices = m_dfuBase->devices;
+    return ret;
 }
 
 bool DFUObject::EndOperation()
@@ -147,61 +169,9 @@ void DFUObject::printProgBar(int const & percent, QString const & label)
 /**
    Utility function
  */
-quint32 DFUObject::CRC32WideFast(quint32 Crc, quint32 Size, quint32 *Buffer)
-{
-    // Size = Size >> 2; // /4  Size passed in as a byte count, assumed to be a multiple of 4
-
-    while (Size--) {
-        // Nibble lookup table for 0x04C11DB7 polynomial
-        static const quint32 CrcTable[16] = {
-            0x00000000, 0x04C11DB7, 0x09823B6E, 0x0D4326D9, 0x130476DC, 0x17C56B6B, 0x1A864DB2, 0x1E475005,
-            0x2608EDB8, 0x22C9F00F, 0x2F8AD6D6, 0x2B4BCB61, 0x350C9B64, 0x31CD86D3, 0x3C8EA00A, 0x384FBDBD
-        };
-
-        Crc     = Crc ^ *((quint32 *)Buffer); // Apply all 32-bits
-
-        Buffer += 1;
-
-        // Process 32-bits, 4 at a time, or 8 rounds
-
-        Crc = (Crc << 4) ^ CrcTable[Crc >> 28]; // Assumes 32-bit reg, masking index to 4-bits
-        Crc = (Crc << 4) ^ CrcTable[Crc >> 28]; // 0x04C11DB7 Polynomial used in STM32
-        Crc = (Crc << 4) ^ CrcTable[Crc >> 28];
-        Crc = (Crc << 4) ^ CrcTable[Crc >> 28];
-        Crc = (Crc << 4) ^ CrcTable[Crc >> 28];
-        Crc = (Crc << 4) ^ CrcTable[Crc >> 28];
-        Crc = (Crc << 4) ^ CrcTable[Crc >> 28];
-        Crc = (Crc << 4) ^ CrcTable[Crc >> 28];
-    }
-
-    return Crc;
-}
-
-/**
-   Utility function
- */
 quint32 DFUObject::CRCFromQBArray(QByteArray array, quint32 Size)
 {
-    quint32 pad = Size - array.length();
-
-    array.append(QByteArray(pad, (char)255));
-    int num_words = Size / 4;
-    quint32 *t    = (quint32 *)malloc(Size);
-    for (int x = 0; x < num_words; x++) {
-        quint32 aux = 0;
-        aux  = (char)array[x * 4 + 3] & 0xFF;
-        aux  = aux << 8;
-        aux += (char)array[x * 4 + 2] & 0xFF;
-        aux  = aux << 8;
-        aux += (char)array[x * 4 + 1] & 0xFF;
-        aux  = aux << 8;
-        aux += (char)array[x * 4 + 0] & 0xFF;
-        t[x] = aux;
-    }
-    quint32 ret = DFUObject::CRC32WideFast(0xFFFFFFFF, num_words, t);
-    free(t);
-
-    return ret;
+    return DFUBase::CRCFromQBArray(array.toStdString(), Size);
 }
 #define BOARD_ID_MB      1
 #define BOARD_ID_INS     2

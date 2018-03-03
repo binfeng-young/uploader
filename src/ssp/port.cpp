@@ -12,9 +12,18 @@ port::port(const string &name, bool debug) : mstatus(port::closed), debug(debug)
     }
 }
 
+port::port(SerialPort* serialPort, bool debug) : mstatus(port::closed), debug(debug){
+    time.start();
+    sport = serialPort;
+    if (sport->isOpened()) {
+        mstatus = port::open;
+    } else {
+        mstatus = port::error;
+    }
+}
+
 port::~port()
 {
-    delete sport;
 }
 
 port::portstatus port::status()

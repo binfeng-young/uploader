@@ -10,7 +10,8 @@ extern "C" {
 #include <unistd.h>
 }
 
-SerialPort::SerialPort() : m_fd(-1){
+SerialPort::SerialPort() : m_fd(-1), m_status(SerialPort::closed)
+{
 
 }
 
@@ -25,7 +26,7 @@ int set_opt(int fd,int wSpeed, int wBits, char cEvent, int wStop)
 
     /*保存测试现有串口参数设置，在这里如果串口号等出错，会有相关的出错信息*/
     if (tcgetattr(fd,&oldtio) != 0) {
-        //perror("SetupSerial 1");
+        perror("SetupSerial 1");
         return -1;
     }
     bzero(&newtio, sizeof(newtio));
@@ -129,6 +130,7 @@ bool SerialPort::openPort(const std::string & deviceName)
     if (m_fd < 0)
     {
         printf("uart %s open err!",dev);
+        m_status = SerialPort::error;
         return false;
     }
 
@@ -136,6 +138,7 @@ bool SerialPort::openPort(const std::string & deviceName)
     if (fcntl(m_fd, F_SETFL, 0) < 0)
     {
         printf("fcntl failed!\n");
+        m_status = SerialPort::error;
         return false;
     }
     else
@@ -146,6 +149,7 @@ bool SerialPort::openPort(const std::string & deviceName)
     if (isatty(STDIN_FILENO)==0)
     {
         printf("standard input is not a terminal device.\n");
+        m_status = SerialPort::error;
         return false;
     }
     else
@@ -158,9 +162,11 @@ bool SerialPort::openPort(const std::string & deviceName)
     if (wRlt < 0)
     {
         printf("set_opt  err!\n");
+        m_status = SerialPort::error;
         return false;
     }
     printf("opened\n");
+    m_status = SerialPort::opened;
     return true;
 }
 
@@ -169,6 +175,7 @@ void SerialPort::closePort()
     if (m_fd > 0) {
         close(m_fd);
     }
+    m_status = SerialPort::closed;
 }
 
 int SerialPort::readBuff(char *p_data_buf, int buf_size) {
@@ -214,4 +221,8 @@ int SerialPort::writeBuff(char *p_data_buf, int buf_size) {
         printf("uart write err.\n");
         return -1;
     }
+}
+
+bool SerialPort::isOpened() {
+    return m_status == SerialPort::opened;
 }

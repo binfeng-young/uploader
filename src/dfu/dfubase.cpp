@@ -2,7 +2,7 @@
 // Created by root on 2/23/18.
 //
 
-#include "dfubase.h"
+#include"dfubase.h"
 #include "port.h"
 #include "sspt.h"
 #include <fstream>
@@ -15,6 +15,16 @@
 using namespace std;
 using namespace DFU;
 
+DFUBase::DFUBase(bool _debug, SerialPort* serialPort) :
+        debug(_debug), mready(true)
+{
+    numberOfDevices = 0;
+    serialhandle    = nullptr;
+    port *info = nullptr;
+    info = new port(serialPort, false);
+    initPort(info);
+}
+
 DFUBase::DFUBase(bool _debug, bool _use_serial,const std::string& portname) :
         debug(_debug), use_serial(_use_serial), mready(true)
 {
@@ -24,36 +34,7 @@ DFUBase::DFUBase(bool _debug, bool _use_serial,const std::string& portname) :
 
     if (use_serial) {
         info = new port(portname, false);
-        info->rxBuf      = sspRxBuf;
-        info->rxBufSize  = MAX_PACKET_DATA_LEN;
-        info->txBuf      = sspTxBuf;
-        info->txBufSize  = MAX_PACKET_DATA_LEN;
-        info->max_retry  = 10;
-        info->timeoutLen = 1000;
-        if (info->status() != port::open) {
-            delete info;
-            info = nullptr;
-            cout << "Could not open serial port\n";
-            mready = false;
-            return;
-        }
-        serialhandle = new sspt(info, false /*debug*/);
-        int count = 0;
-        std::cout << "sync...." << std::endl;
-        while (!serialhandle->ssp_Synchronise() && (count++ < 10)) {
-            if (debug) {
-                std::cout << "SYNC failed, resending..." << std::endl;
-            }
-        }
-        if (count == 10) {
-            mready = false;
-            std::cout << "SYNC failed" << std::endl;
-            return;
-        }
-        std::cout << "SYNC success" << std::endl;
-        // transfer ownership of port to serialhandle thread
-        // start the serialhandle thread
-        serialhandle->start();
+        initPort(info);
     } else {
 /*
         hidHandle = new opHID_hidapi();
@@ -108,7 +89,40 @@ DFUBase::DFUBase(bool _debug, bool _use_serial,const std::string& portname) :
  */
     }
 }
+void DFUBase::initPort(port*& info)
+{
+    if (info->status() != port::open) {
+        delete info;
+        info = nullptr;
+        cout << "Could not open serial port\n";
+        mready = false;
+        return;
+    }
+    info->rxBuf      = sspRxBuf;
+    info->rxBufSize  = MAX_PACKET_DATA_LEN;
+    info->txBuf      = sspTxBuf;
+    info->txBufSize  = MAX_PACKET_DATA_LEN;
+    info->max_retry  = 10;
+    info->timeoutLen = 1000;
 
+    serialhandle = new sspt(info, false /*debug*/);
+    int count = 0;
+    std::cout << "sync...." << std::endl;
+    while (!serialhandle->ssp_Synchronise() && (count++ < 10)) {
+        if (debug) {
+            std::cout << "SYNC failed, resending..." << std::endl;
+        }
+    }
+    if (count == 10) {
+        mready = false;
+        std::cout << "SYNC failed" << std::endl;
+        return;
+    }
+    std::cout << "SYNC success" << std::endl;
+    // transfer ownership of port to serialhandle thread
+    // start the serialhandle thread
+    serialhandle->start();
+}
 DFUBase::~DFUBase()
 {
     if (use_serial) {
@@ -294,22 +308,6 @@ DFU::Status DFUBase::UploadDescription(const std::string& desc)
 {
     cout << "Starting uploading description\n";
 
-    //std::string array;
-//    if (desc.type() == QVariant::String) {
-//        QString description = desc.toString();
-//        if (description.length() % 4 != 0) {
-//            int pad = description.length() / 4;
-//            pad = (pad + 1) * 4;
-//            pad = pad - description.length();
-//            QString padding;
-//            padding.fill(' ', pad);
-//            description.append(padding);
-//        }
-//        array = description.toLatin1();
-//    } else if (desc.type() == QVariant::ByteArray) {
-//        array = desc.toByteArray();
-//    }
-
     if (!StartUpload(desc.length(), DFU::Descript, 0)) {
         return DFU::abort;
     }
@@ -337,6 +335,7 @@ std::string DFUBase::DownloadDescription(int const & numberOfChars)
     std::string arr;
 
     StartDownloadT(arr, numberOfChars, DFU::Descript);
+    std::cout << "***** " << arr << std::endl;
     ulong index = arr.find((char)255, 0);
     return std::string((index == std::string::npos) ? arr : arr.substr(0, index));
 }
@@ -346,7 +345,7 @@ std::string DFUBase::DownloadDescriptionAsBA(int const & numberOfChars)
     std::string arr;
 
     StartDownloadT(arr, numberOfChars, DFU::Descript);
-
+    std::cout << "***** " << arr << std::endl;
     return arr;
 }
 
@@ -1038,45 +1037,4 @@ int DFUBase::receiveData(void *data, int size)
             return x;
         }
     }
-}
-
-#define BOARD_ID_MB      1
-#define BOARD_ID_INS     2
-#define BOARD_ID_PIP     3
-#define BOARD_ID_CC      4
-#define BOARD_ID_REVO    9
-#define BOARD_ID_SPARKY2 0x92
-
-/**
-   Gets the type of board connected
- */
-DFU::eBoardType DFUBase::GetBoardType(int boardNum)
-{
-    DFU::eBoardType brdType = eBoardUnkwn;
-
-    // First of all, check what Board type we are talking to
-    int board = devices[boardNum].ID;
-
-    //qDebug() << "Board model: " << board;
-    switch (board >> 8) {
-        case BOARD_ID_MB: // Mainboard family
-            brdType = eBoardMainbrd;
-            break;
-        case BOARD_ID_INS: // Inertial Nav
-            brdType = eBoardINS;
-            break;
-        case BOARD_ID_PIP: // PIP RF Modem
-            brdType = eBoardPip;
-            break;
-        case BOARD_ID_CC: // CopterControl family
-            brdType = eBoardCC;
-            break;
-        case BOARD_ID_REVO: // Revo board
-            brdType = eBoardRevo;
-            break;
-        case BOARD_ID_SPARKY2: // Sparky2 board
-            brdType = eBoardSparky2;
-            break;
-    }
-    return brdType;
 }

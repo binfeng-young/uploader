@@ -17,6 +17,8 @@
 
 // serial
 class sspt;
+class port;
+class SerialPort;
 
 // usb
 //class opHID_hidapi;
@@ -102,6 +104,7 @@ namespace DFU {
         static uint32_t CRCFromQBArray(std::string array, uint32_t Size);
 
         DFUBase(bool debug, bool use_serial,const std::string& port);
+        DFUBase(bool debug, SerialPort* serialPort);
 
         virtual ~DFUBase();
 
@@ -177,6 +180,7 @@ namespace DFU {
         // Thread management:
         // Same as startDownload except that we store in an external array:
         bool StartDownloadT(std::string &fw, int32_t const & numberOfBytes, TransferTypes const & type);
+        void initPort(port*& info);
     };
 }
 

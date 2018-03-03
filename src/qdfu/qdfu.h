@@ -80,14 +80,13 @@ public:
     bool SaveByteArrayToFile(QString const & file, QByteArray const &array);
 
     // Variables:
-    QList<device> devices;
+    std::vector<device> devices;
     int numberOfDevices;
     int send_delay;
     bool use_delay;
 
     // Helper functions:
     QString StatusToString(DFU::Status const & status);
-    static quint32 CRC32WideFast(quint32 Crc, quint32 Size, quint32 *Buffer);
     DFU::eBoardType GetBoardType(int boardNum);
 
 signals:
@@ -98,39 +97,9 @@ signals:
 
 private:
     DFUBase *m_dfuBase;
-//    // Generic variables:
-//    bool debug;
-//    bool use_serial;
-//    bool mready;
-//    int RWFlags;
-//
-//    // Serial
-//    sspt *serialhandle;
-//
-//    // USB
-//    // opHID_hidapi *hidHandle;
-//
-//    int sendData(void *, int);
-//    int receiveData(void *data, int size);
-//    uint8_t sspTxBuf[MAX_PACKET_BUF_SIZE];
-//    uint8_t sspRxBuf[MAX_PACKET_BUF_SIZE];
-//
-//    int setStartBit(int command)
-//    {
-//        return command | 0x20;
-//    }
-//
-//    void CopyWords(char *source, char *destination, int count);
+//  void CopyWords(char *source, char *destination, int count);
     void printProgBar(int const & percent, QString const & label);
-    //bool StartUpload(qint32 const &numberOfBytes, TransferTypes const & type, quint32 crc);
-    //bool UploadData(qint32 const & numberOfPackets, QByteArray & data);
-//
-//    // Thread management:
-//    // Same as startDownload except that we store in an external array:
-    //bool StartDownloadT(QByteArray *fw, qint32 const & numberOfBytes, TransferTypes const & type);
-    //DFU::Status UploadFirmwareT(const QString &sfile, const bool &verify, int device);
-//    QMutex mutex;
-      DFU::Commands requestedOperation;
+    DFU::Commands requestedOperation;
     qint32 requestSize;
     DFU::TransferTypes requestTransferType;
     QByteArray *requestStorage;

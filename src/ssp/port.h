@@ -15,6 +15,7 @@ public:
     enum portstatus { open, closed, error };
 
     port(const std::string &name, bool debug);
+    port(SerialPort* serialPort, bool debug);
     virtual ~port();
     portstatus status();
 

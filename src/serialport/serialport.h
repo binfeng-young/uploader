@@ -17,6 +17,7 @@ enum {
 #include <string>
 
 class SerialPort {
+    enum status { opened, closed, error };
 public:
     SerialPort();
     virtual ~SerialPort();
@@ -25,9 +26,10 @@ public:
     void closePort();
     int readBuff(char* p_data_buf,int buf_size);
     int writeBuff(char *p_data_buf, int buf_size);
+    bool isOpened();
 private:
     int m_fd;
-
+    status m_status;
 };
 
 

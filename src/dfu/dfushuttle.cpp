@@ -8,11 +8,26 @@
 #include <streambuf>
 #include <sstream>
 #include <thread>
+#include <cstring>
+#include "serialport.h"
 
 int main(int argc, char *argv[]) {
+    std::string filePath = "/home/binfeng/Desktop/fw_hx_v200.opfw";
+    std::string portName = "ttyUSB0";
+    SerialPort serialPort;
+    serialPort.openPort(portName);
+    if (!serialPort.isOpened()) {
+        std::cout << "Could not open serial port: ttyUSB0" << std::endl;
+        return -1;
+    }
+    uint8_t toBLCmd[] = {0xb5, 0x62, 0x00, 0x03, 0x4c, 0x00, 0x4c};
+    if (serialPort.writeBuff(reinterpret_cast<char *>(toBLCmd), 7) <= 0) {
+        std::cout << "Could not write serial" << std::endl;
+        return -1;
+    }
     bool debug = false;
-    std::string filePath = "D:/workspace/Linux/HXsweeper/build/firmware/fw_hx_v200/fw_hx_v200.opfw";
-    DFU::DFUBase dfu(true, true, "ttyS3");
+
+    DFU::DFUBase dfu(true, &serialPort);
     if (!dfu.ready()) {
         return -1;
     }
@@ -22,10 +37,7 @@ int main(int argc, char *argv[]) {
         std::cout << "Could not enter DFU mode\n" << std::endl;
         return -1;
     }
-    if (debug) {
-        DFU::Status ret = dfu.StatusRequest();
-        std::cout << dfu.StatusToString(ret) << std::endl;
-    }
+
     if (!dfu.findDevices() || (dfu.numberOfDevices != 1)) {
         std::cout << "Could not detect a board, aborting!" << std::endl;
         return -1;
@@ -90,6 +102,7 @@ int main(int argc, char *argv[]) {
 //            return -1;
 //        }
     //   }
+    dfu.JumpToApp(false, true);
     std::cout << "Uploading Succeeded!\n" << std::endl;
     return 0;
 }

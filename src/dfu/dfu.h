@@ -1,4 +1,4 @@
-/**
+ /**
  ******************************************************************************
  *
  * @file       dfu.h
@@ -43,7 +43,7 @@
 class qsspt;
 
 // usb
-//class opHID_hidapi;
+class opHID_hidapi;
 
 namespace DFU {
 #if QT_VERSION >= QT_VERSION_CHECK(5, 8, 0)
@@ -195,7 +195,7 @@ private:
     qsspt *serialhandle;
 
     // USB
-    // opHID_hidapi *hidHandle;
+     opHID_hidapi *hidHandle;
 
     int sendData(void *, int);
     int receiveData(void *data, int size);

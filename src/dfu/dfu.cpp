@@ -30,14 +30,15 @@
 #include "port.h"
 #include "qsspt.h"
 
-// #include <ophid/inc/ophid_hidapi.h>
-// #include <ophid/inc/ophid_usbmon.h>
-// #include <ophid/inc/ophid_usbsignal.h>
+ #include "ophid_hidapi.h"
+ #include "ophid_usbmon.h"
+ #include "ophid_usbsignal.h"
 
 #include <QTimer>
 #include <QDebug>
 
 #include <iostream>
+#include <QtCore/QEventLoop>
 
 using namespace std;
 using namespace DFU;
@@ -85,7 +86,6 @@ DFUObject::DFUObject(bool _debug, bool _use_serial, QString portname) :
         // start the serialhandle thread
         serialhandle->start();
     } else {
-/*
         hidHandle = new opHID_hidapi();
 
         mready    = false;
@@ -135,7 +135,6 @@ DFUObject::DFUObject(bool _debug, bool _use_serial, QString portname) :
                 }
             }
         }
- */
     }
 }
 
@@ -150,12 +149,10 @@ DFUObject::~DFUObject()
         }
 
     } else {
-/*
         if (hidHandle) {
             hidHandle->close(0);
             delete hidHandle;
         }
- */
     }
 }
 
@@ -1065,11 +1062,9 @@ quint32 DFUObject::CRCFromQBArray(QByteArray array, quint32 Size)
  */
 int DFUObject::sendData(void *data, int size)
 {
-/*
     if (!use_serial) {
         return hidHandle->send(0, data, size, 5000);
     }
- */
 
     // Serial Mode:
     if (serialhandle->sendData((uint8_t *)data + 1, size - 1)) {
@@ -1090,11 +1085,9 @@ int DFUObject::sendData(void *data, int size)
  */
 int DFUObject::receiveData(void *data, int size)
 {
-/*
     if (!use_serial) {
         return hidHandle->receive(0, data, size, 10000);
     }
- */
 
     // Serial Mode:
     int x;

@@ -4,8 +4,9 @@ set (CMAKE_PREFIX_PATH "C:/Qt/Qt5.10.0/5.10.0/mingw53_32")
 find_package(Qt5 REQUIRED COMPONENTS Widgets SerialPort)
 set(QT_LIBRARIES Qt5::Widgets Qt5::SerialPort)
 
-include_directories(ssp qssp dfu)
+include_directories(usb ssp qssp dfu)
 
+add_subdirectory(usb)
 add_subdirectory(ssp)
 add_subdirectory(qssp)
 add_subdirectory(dfu)
@@ -19,7 +20,7 @@ set(baseic_srcs
         enums.h
         devicedescriptorstruct.h
         )
-set(moc_files mainwindow.h
+set(moc_files #mainwindow.h
         #serialportconnection.h
         uploaderwidget.h
         devicewidget.h

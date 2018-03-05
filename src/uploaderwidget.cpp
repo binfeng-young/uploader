@@ -29,7 +29,7 @@
 
 #include "ui_uploader.h"
 
-//#include <ophid/inc/ophid_usbmon.h>
+#include "ophid_usbmon.h"
 
 //#include "flightstatus.h"
 #include "devicewidget.h"
@@ -87,8 +87,8 @@ ConnectionWaiter::ConnectionWaiter(int targetDeviceCount, int timeout, QWidget *
 
 int ConnectionWaiter::exec()
 {
-//    connect(USBMonitor::instance(), SIGNAL(deviceDiscovered(USBPortInfo)), this, SLOT(deviceEvent()));
-//    connect(USBMonitor::instance(), SIGNAL(deviceRemoved(USBPortInfo)), this, SLOT(deviceEvent()));
+    connect(USBMonitor::instance(), SIGNAL(deviceDiscovered(USBPortInfo)), this, SLOT(deviceEvent()));
+    connect(USBMonitor::instance(), SIGNAL(deviceRemoved(USBPortInfo)), this, SLOT(deviceEvent()));
 
     connect(&timer, SIGNAL(timeout()), this, SLOT(perform()));
     timer.start(1000);
@@ -107,8 +107,8 @@ void ConnectionWaiter::cancel()
 
 void ConnectionWaiter::quit()
 {
-//    disconnect(USBMonitor::instance(), SIGNAL(deviceDiscovered(USBPortInfo)), this, SLOT(deviceEvent()));
-//    disconnect(USBMonitor::instance(), SIGNAL(deviceRemoved(USBPortInfo)), this, SLOT(deviceEvent()));
+    disconnect(USBMonitor::instance(), SIGNAL(deviceDiscovered(USBPortInfo)), this, SLOT(deviceEvent()));
+    disconnect(USBMonitor::instance(), SIGNAL(deviceRemoved(USBPortInfo)), this, SLOT(deviceEvent()));
     timer.stop();
     eventLoop.exit();
 }
@@ -126,9 +126,9 @@ void ConnectionWaiter::perform()
 
 void ConnectionWaiter::deviceEvent()
 {
-//    if (USBMonitor::instance()->availableDevices(0x20a0, -1, -1, -1).length() == targetDeviceCount) {
-//        quit();
-//    }
+    if (USBMonitor::instance()->availableDevices(0x20a0, -1, -1, -1).length() == targetDeviceCount) {
+        quit();
+    }
 }
 
 int ConnectionWaiter::openDialog(const QString &title, const QString &labelText, int targetDeviceCount, int timeout, QWidget *parent, Qt::WindowFlags flags)
@@ -149,7 +149,9 @@ UploaderWidget::UploaderWidget(QWidget *parent) :
     m_resetOnly = false;
     m_dfu = NULL;
     m_autoUpdateClosing = false;
-
+    m_usbMonitor = new USBMonitor(this);
+    connect(m_usbMonitor, SIGNAL(deviceDiscovered()), this, SLOT(onDeviceConnected()));
+    connect(m_usbMonitor, SIGNAL(deviceRemoved()), this, SLOT(onDeviceDisconnected()));
     // Listen to autopilot connection events
 //    ExtensionSystem::PluginManager *pm = ExtensionSystem::PluginManager::instance();
 //    TelemetryManager *telMngr = pm->getObject<TelemetryManager>();
@@ -186,6 +188,7 @@ UploaderWidget::UploaderWidget(QWidget *parent) :
 //    if (telMngr->isConnected()) {
 //        onAutopilotConnect();
 //    }
+    m_usbMonitor->start();
 }
 
 bool sortPorts(const QSerialPortInfo &s1, const QSerialPortInfo &s2)
@@ -928,7 +931,6 @@ void UploaderWidget::systemRescue()
     // Check if boards are connected and, if yes, prompt user to disconnect them all
     if(devName != "USB") {
         m_dfu = new DFUObject(DFU_DEBUG, true, devName);
-        m_dfu->syncSerialPort();
         if (!m_dfu->ready()){
             this->setEnabled(true);
             log("not ready");
@@ -939,20 +941,20 @@ void UploaderWidget::systemRescue()
             log("ready");
         }
     } else {
-//    if (USBMonitor::instance()->availableDevices(0x20a0, -1, -1, -1).length() > 0) {
-//        QString labelText = QString("<p align=\"left\">%1</p>").arg(tr("Please disconnect your board."));
-//        int result = ConnectionWaiter::openDialog(tr("System Rescue"), labelText, 0, BOARD_EVENT_TIMEOUT, this);
-//        switch (result) {
-//        case ConnectionWaiter::Canceled:
-//            m_config->rescueButton->setEnabled(true);
-//            return;
-//
-//        case ConnectionWaiter::TimedOut:
-//            QMessageBox::warning(this, tr("System Rescue"), tr("Timed out while waiting for all boards to be disconnected!"));
-//            m_config->rescueButton->setEnabled(true);
-//            return;
-//        }
-//    }
+        if (USBMonitor::instance()->availableDevices(0x20a0, -1, -1, -1).length() > 0) {
+            QString labelText = QString("<p align=\"left\">%1</p>").arg(tr("Please disconnect your board."));
+            int result = ConnectionWaiter::openDialog(tr("System Rescue"), labelText, 0, BOARD_EVENT_TIMEOUT, this);
+            switch (result) {
+            case ConnectionWaiter::Canceled:
+                m_config->rescueButton->setEnabled(true);
+                return;
+
+            case ConnectionWaiter::TimedOut:
+                QMessageBox::warning(this, tr("System Rescue"), tr("Timed out while waiting for all boards to be disconnected!"));
+                m_config->rescueButton->setEnabled(true);
+                return;
+            }
+        }
 
         // Now prompt user to connect board
         QString labelText = QString("<p align=\"left\">%1</p>").arg(tr("Please connect your board."));
@@ -1196,6 +1198,8 @@ UploaderWidget::~UploaderWidget()
         delete qw;
         qw = 0;
     }
+    m_usbMonitor->quit();
+    m_usbMonitor->wait(500);
 }
 
 void UploaderWidget::openHelp()

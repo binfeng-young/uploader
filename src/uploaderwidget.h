@@ -34,6 +34,7 @@
 #include <QTimer>
 #include "dfu.h"
 
+class USBMonitor;
 using namespace DFU;
 using namespace uploader;
 namespace Ui {
@@ -140,6 +141,7 @@ signals:
 
 private:
     Ui::UploaderWidget *m_config;
+    USBMonitor *m_usbMonitor;
     DFUObject *m_dfu;
     IAPStep m_currentIAPStep;
     bool m_resetOnly;

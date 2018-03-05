@@ -1,13 +1,12 @@
 set(exec_name ${PROJECT_NAME})
 
-set (CMAKE_PREFIX_PATH "C:/cygwin64")
+set (CMAKE_PREFIX_PATH "/opt/Qt5.6.1/5.6/gcc_64")
 find_package(Qt5 REQUIRED COMPONENTS Widgets SerialPort)
 set(QT_LIBRARIES Qt5::Widgets Qt5::SerialPort)
 
-include_directories(serialport ssp qssp dfu qdfu)
+include_directories(serialport ssp dfu qdfu)
 add_subdirectory(serialport)
 add_subdirectory(ssp)
-#add_subdirectory(qssp)
 add_subdirectory(dfu)
 add_subdirectory(qdfu)
 set(baseic_srcs
@@ -17,7 +16,6 @@ set(baseic_srcs
         #rebootdialog.cpp
         enums.h
         devicedescriptorstruct.h
-        utils.h
         )
 set(moc_files
         uploaderwidget.h
@@ -29,7 +27,7 @@ set(uic_files
         devicewidget.ui
         #rebootdialog.ui
         )
-set(qrc_files uploader.qrc)
+set(qrc_files ../res/uploader.qrc)
 
 QT5_WRAP_CPP(moc_srcs ${moc_files})
 QT5_WRAP_UI(uic_srcs ${uic_files})

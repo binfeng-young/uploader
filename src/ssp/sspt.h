@@ -7,7 +7,7 @@
 #include <queue>
 #include <mutex>
 #include <vector>
-#include "../utils.h"
+#include "utils.h"
 
 class sspt : public ssp, public Thread {
 public:

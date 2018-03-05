@@ -2,7 +2,7 @@
 // Created by root on 2/23/18.
 //
 
-#include"dfubase.h"
+#include "dfubase.h"
 #include "port.h"
 #include "sspt.h"
 #include <fstream>
@@ -18,6 +18,7 @@ using namespace DFU;
 DFUBase::DFUBase(bool _debug, SerialPort* serialPort) :
         debug(_debug), mready(true)
 {
+    use_serial = true;
     numberOfDevices = 0;
     serialhandle    = nullptr;
     port *info = nullptr;
@@ -336,7 +337,7 @@ std::string DFUBase::DownloadDescription(int const & numberOfChars)
 
     StartDownloadT(arr, numberOfChars, DFU::Descript);
     std::cout << "***** " << arr << std::endl;
-    ulong index = arr.find((char)255, 0);
+    long index = arr.find((char)255, 0);
     return std::string((index == std::string::npos) ? arr : arr.substr(0, index));
 }
 

@@ -3,8 +3,13 @@ set(ssp_srcs
         sspt.cpp sspt.cpp
         port.cpp port.h
         common.h
-        #fifo_buffer.cpp fifo_buffer.h
         )
-include_directories(../serialport)
 add_library(ssp ${ssp_srcs})
-target_link_libraries(ssp serialport pthread)
+if (UNIX)
+    add_subdirectory(serialport)
+    set(libs serialport pthread)
+else()
+    set(libs Qt5::SerialPort)
+endif()
+
+target_link_libraries(ssp ${libs})

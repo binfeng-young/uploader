@@ -223,6 +223,6 @@ int SerialPort::writeBuff(char *p_data_buf, int buf_size) {
     }
 }
 
-bool SerialPort::isOpened() {
+bool SerialPort::isOpen() {
     return m_status == SerialPort::opened;
 }

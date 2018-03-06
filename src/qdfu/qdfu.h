@@ -98,7 +98,7 @@ signals:
 private:
     DFUBase *m_dfuBase;
 //  void CopyWords(char *source, char *destination, int count);
-    void printProgBar(int const & percent, QString const & label);
+    void printProgBar(int const & percent);
     DFU::Commands requestedOperation;
     qint32 requestSize;
     DFU::TransferTypes requestTransferType;

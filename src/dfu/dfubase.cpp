@@ -921,6 +921,9 @@ void DFUBase::printProgBar(int const & percent, std::string const & label)
         std::cout.width(3);
         std::cout << percent << "%     " << std::flush;
     }
+    if (nullptr != printCb) {
+        printCb(percent);
+    }
 }
 
 /**

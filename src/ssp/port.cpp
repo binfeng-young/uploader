@@ -1,13 +1,33 @@
-#include "serialport.h"
 #include "port.h"
+
+#ifdef USE_QSERIALPORT
+#include <QSerialPort>
+#include <QString>
+#else
+#include "serialport.h"
+#endif
 using namespace std;
 port::port(const string &name, bool debug) : mstatus(port::closed), debug(debug)
 {
     time.start();
+#ifdef USE_QSERIALPORT
+    sport = new QSerialPort(QString::fromStdString(name));
+    if (sport->open(QIODevice::ReadWrite)) {
+        if (sport->setBaudRate(QSerialPort::Baud115200)
+            && sport->setDataBits(QSerialPort::Data8)
+            && sport->setParity(QSerialPort::NoParity)
+            && sport->setStopBits(QSerialPort::OneStop)
+            && sport->setFlowControl(QSerialPort::NoFlowControl)) {
+            mstatus = port::open;
+        }
+    }
+#else
     sport = new SerialPort();
     if (sport->openPort(name))  {
         mstatus = port::open;
-    } else {
+    }
+#endif
+    else {
         mstatus = port::error;
     }
 }
@@ -15,7 +35,7 @@ port::port(const string &name, bool debug) : mstatus(port::closed), debug(debug)
 port::port(SerialPort* serialPort, bool debug) : mstatus(port::closed), debug(debug){
     time.start();
     sport = serialPort;
-    if (sport->isOpened()) {
+    if (sport->isOpen()) {
         mstatus = port::open;
     } else {
         mstatus = port::error;
@@ -34,16 +54,16 @@ port::portstatus port::status()
 int16_t port::pfSerialRead(void)
 {
     char c[1];
-
-    if (sport->readBuff(c, 1) > 0) {
-//        if (debug) {
-//            if (((uint8_t)c[0]) == 0xe1 || rxDebugBuff.count() > 50) {
-//                qDebug() << "PORT R " << rxDebugBuff.toHex();
-//                rxDebugBuff.clear();
-//            }
-//            rxDebugBuff.append(c[0]);
-//        }
-    } else {
+#ifdef USE_QSERIALPORT
+    // TODO why the wait ? (gcs uploader dfu does not have it)
+    sport->waitForBytesWritten(1);
+    if (sport->bytesAvailable() || sport->waitForReadyRead(0)) {
+        sport->read(c, 1);
+    }
+#else
+    if (sport->readBuff(c, 1) > 0) {}
+#endif
+    else {
         return -1;
     }
     return (uint8_t)c[0];
@@ -54,14 +74,13 @@ void port::pfSerialWrite(uint8_t c)
     char cc[1];
 
     cc[0] = c;
+#ifdef USE_QSERIALPORT
+    sport->write(cc, 1);
+    sport->waitForBytesWritten(1);
+#else
     sport->writeBuff(cc, 1);
-//    if (debug) {
-//        if (((uint8_t)cc[0]) == 0xe1 || rxDebugBuff.count() > 50) {
-//            qDebug() << "PORT T " << txDebugBuff.toHex();
-//            txDebugBuff.clear();
-//        }
-//        txDebugBuff.append(cc[0]);
-//    }
+#endif
+
 }
 
 uint32_t port::pfGetTime()

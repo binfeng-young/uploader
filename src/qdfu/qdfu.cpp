@@ -11,6 +11,7 @@ DFUObject::DFUObject(bool _debug, bool _use_serial, QString portname)
 {
     qRegisterMetaType<DFU::Status>("Status");
     m_dfuBase = new DFUBase(_debug, _use_serial, portname.toStdString());
+    m_dfuBase ->printCb = [&](int const & percent){emit(progressUpdated(percent));};
 }
 
 DFUObject::~DFUObject()
@@ -160,10 +161,9 @@ QString DFUObject::StatusToString(DFU::Status const & status)
 
    Also outputs to stdout if we are in debug mode.
  */
-void DFUObject::printProgBar(int const & percent, QString const & label)
+void DFUObject::printProgBar(int const & percent)
 {
     emit(progressUpdated(percent));
-    //m_dfuBase->printProgBar(percent, label.toStdString());
 }
 
 /**

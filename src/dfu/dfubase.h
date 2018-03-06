@@ -18,7 +18,12 @@
 // serial
 class sspt;
 class port;
+#ifdef USE_QSERIALPORT
+class QSerialPort;
+typedef QSerialPort SerialPort;
+#else
 class SerialPort;
+#endif
 
 // usb
 //class opHID_hidapi;
@@ -150,6 +155,7 @@ namespace DFU {
         static uint32_t CRC32WideFast(uint32_t Crc, uint32_t Size, uint32_t *Buffer);
         DFU::eBoardType GetBoardType(int boardNum);
         void printProgBar(int const & percent, std::string const & label);
+        std::function<void(int const & percent)> printCb = nullptr;
     private:
         // Generic variables:
         bool debug;

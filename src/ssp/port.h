@@ -7,7 +7,13 @@
 #include <string>
 #include <chrono>
 
+#ifdef USE_QSERIALPORT
+class QSerialPort;
+typedef QSerialPort SerialPort;
+#else
 class SerialPort;
+#endif
+
 
 class port {
 

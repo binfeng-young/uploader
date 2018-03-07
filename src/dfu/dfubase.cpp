@@ -109,7 +109,7 @@ void DFUBase::initPort(port*& info)
     serialhandle = new sspt(info, false /*debug*/);
     int count = 0;
     std::cout << "sync...." << std::endl;
-    while (!serialhandle->ssp_Synchronise() && (count++ < 10)) {
+    while (!serialhandle->ssp_Synchronise() && (++count < 10)) {
         if (debug) {
             std::cout << "SYNC failed, resending..." << std::endl;
         }

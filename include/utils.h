@@ -56,7 +56,7 @@ public:
 //        }
 //    };
     void waitStop() {
-        if (m_thread->joinable()) {
+        if (nullptr != m_thread && m_thread->joinable()) {
             m_thread->join();
         }
     }

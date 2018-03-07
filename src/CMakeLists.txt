@@ -15,19 +15,25 @@ add_subdirectory(dfu)
 add_subdirectory(qdfu)
 set(baseic_srcs
         main.cpp
+        mainwindow.cpp
         devicewidget.cpp
         uploaderwidget.cpp
+        serialportwidget.cpp
         #rebootdialog.cpp
         enums.h
         devicedescriptorstruct.h
         )
 set(moc_files
+        mainwindow.h
         uploaderwidget.h
+        serialportwidget.h
         devicewidget.h
         #rebootdialog.h
         )
 set(uic_files
-        uploader.ui
+        mainwindow.ui
+        uploaderwidget.ui
+        serialportwidget.ui
         devicewidget.ui
         #rebootdialog.ui
         )

@@ -1,30 +1,3 @@
-/**
- ******************************************************************************
- *
- * @file       uploadergadgetwidget.h
- * @author     The OpenPilot Team, http://www.openpilot.org Copyright (C) 2010.
- * @addtogroup GCSPlugins GCS Plugins
- * @{
- * @addtogroup YModemUploader YModem Serial Uploader Plugin
- * @{
- * @brief The YModem protocol serial uploader plugin
- *****************************************************************************/
-/*
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- */
-
 #ifndef UPLOADERGADGETWIDGET_H
 #define UPLOADERGADGETWIDGET_H
 #include "enums.h"
@@ -118,13 +91,11 @@ public:
     static const int BOOTLOADER_TIMEOUT;
 
     void log(QString str);
-    bool autoUpdateCapable();
 
 public slots:
     void onAutopilotConnect();
     void onAutopilotDisconnect();
     void populate();
-    void openHelp();
     void autoUpdateDisconnectProgress(int);
     void autoUpdateConnectProgress(int);
     void autoUpdateFlashProgress(int);
@@ -142,29 +113,17 @@ private:
     Ui::UploaderWidget *m_config;
     DFUObject *m_dfu;
     IAPStep m_currentIAPStep;
-    bool m_resetOnly;
-    bool m_autoUpdateClosing;
-
     void clearLog();
     QString getPortDevice(const QString &friendName);
     void connectSignalSlot(QWidget *widget);
-    FlightStatus *getFlightStatus();
     void bootButtonsSetEnable(bool enabled);
-    int confirmEraseSettingsMessageBox();
-    int cannotHaltMessageBox();
-    int cannotResetMessageBox();
-    void startAutoUpdate(bool erase);
 
 private slots:
     void onPhysicalHWConnect();
-    void goToBootloader(UAVObject * = NULL, bool = false);
-    void systemHalt();
-    void systemReset();
     void systemBoot();
     void systemSafeBoot();
     void systemEraseBoot();
     void rebootWithDialog();
-    void systemReboot();
     void commonSystemBoot(bool safeboot = false, bool erase = false);
     void systemRescue();
     void getSerialPorts();
@@ -172,12 +131,6 @@ private slots:
     void uploadEnded(bool succeed);
     void downloadStarted();
     void downloadEnded(bool succeed);
-    void startAutoUpdate();
-    void startAutoUpdateErase();
-    bool autoUpdate(bool erase);
-    void finishAutoUpdate();
-    void closeAutoUpdate();
-    void autoUpdateStatus(uploader::ProgressStep status, QVariant value);
 };
 
 #endif // UPLOADERGADGETWIDGET_H

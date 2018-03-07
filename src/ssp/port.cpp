@@ -44,6 +44,7 @@ port::port(SerialPort* serialPort, bool debug) : mstatus(port::closed), debug(de
 
 port::~port()
 {
+    sport->close();
 }
 
 port::portstatus port::status()

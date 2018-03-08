@@ -34,7 +34,7 @@ DFUBase::DFUBase(bool _debug, bool _use_serial,const std::string& portname) :
     port *info = nullptr;
 
     if (use_serial) {
-        info = new port(portname, false);
+        info = new port(portname, _debug);
         initPort(info);
     } else {
 /*
@@ -106,7 +106,7 @@ void DFUBase::initPort(port*& info)
     info->max_retry  = 10;
     info->timeoutLen = 1000;
 
-    serialhandle = new sspt(info, false /*debug*/);
+    serialhandle = new sspt(info, debug /*debug*/);
     int count = 0;
     std::cout << "sync...." << std::endl;
     while (!serialhandle->ssp_Synchronise() && (++count < 10)) {
@@ -221,7 +221,7 @@ bool DFUBase::StartUpload(int32_t const & numberOfBytes, TransferTypes const & t
     }
 
     int result = sendData(buf, BUF_LEN);
-    this_thread::sleep_for(std::chrono::microseconds(1000));
+    this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     if (debug) {
         //qDebug() << result << " bytes sent";
@@ -546,7 +546,7 @@ DFU::Status DFUBase::StatusRequest()
     while (result < 0 && retry_cnt < MaxSendRetry) {
         retry_cnt++;
         //qWarning() << "StatusRequest failed, sleeping" << SendRetryIntervalMS << "ms";
-        this_thread::sleep_for(std::chrono::microseconds(SendRetryIntervalMS));
+        this_thread::sleep_for(std::chrono::milliseconds(SendRetryIntervalMS));
         //qWarning() << "StatusRequest retry attempt" << retry_cnt;
         result = sendData(buf, BUF_LEN);
     }
@@ -1001,12 +1001,12 @@ int DFUBase::sendData(void *data, int size)
     // Serial Mode:
     if (serialhandle->sendData((uint8_t *)data + 1, size - 1)) {
         if (debug) {
-            //qDebug() << "packet sent" << "data0" << ((uint8_t *)data + 1)[0];
+            std::cout  << "packet sent" << "data0" << (int)(((uint8_t *)data + 1)[0]) << std::endl;
         }
         return size;
     }
     if (debug) {
-        //qDebug() << "Serial send OVERRUN";
+        std::cout << "Serial send OVERRUN" << std::endl;
     }
     return -1;
 }
@@ -1032,7 +1032,7 @@ int DFUBase::receiveData(void *data, int size)
         if ((x = serialhandle->read_Packet(((char *)data) + 1) != -1) || time.elapsed() > 10000) {
             // QThread::msleep(10);
             if (time.elapsed() > 10000) {
-                //qDebug() << "____timeout";
+                std::cout << "____timeout";
             }
             if (x > size - 1) {
                 //qDebug() << "Error buffer overrun";

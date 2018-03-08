@@ -52,9 +52,9 @@ bool sspt::sendData(uint8_t *buf, uint16_t size)
 
 void sspt::pfCallBack(uint8_t *buf, uint16_t size)
 {
-//    if (debug) {
-//        qDebug() << "receive callback" << buf[0] << buf[1] << buf[2] << buf[3] << buf[4] << "queue size=" << queue.count();
-//    }
+    if (debug) {
+        std::cout<< "receive callback" << buf[0] << buf[1] << buf[2] << buf[3] << buf[4] << "queue size=" << queue.size() << std::endl;
+    }
     std::string data(buf, buf + size);
     mutex.lock();
     queue.push(data);
@@ -76,9 +76,9 @@ int sspt::read_Packet(void *data)
     std::string arr = queue.front();
     queue.pop();
     std::memcpy(data, (uint8_t *)arr.data(), arr.size());
-//    if (debug) {
-//        qDebug() << "SSP RX " << arr.toHex();
-//    }
+    if (debug) {
+        std::cout << "SSP RX " << arr << std::endl;
+    }
     mutex.unlock();
     return arr.size();
 }

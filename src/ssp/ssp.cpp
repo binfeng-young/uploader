@@ -729,9 +729,9 @@ int16_t ssp::sf_ReceivePacket()
             SETBIT(thisport->txSeqNo, ACK_BIT);
             thisport->SendState = SSP_ACKED;
             value = FALSE;
-//            if (debug) {
-//                qDebug() << "Received ACK:" << (thisport->txSeqNo & 0x7F);
-//            }
+            if (debug) {
+                std::cout << "Received ACK:" << (thisport->txSeqNo & 0x7F) << std::endl;
+            }
         }
         // else ignore the ACK packet
     } else {

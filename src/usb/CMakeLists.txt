@@ -21,7 +21,9 @@ if (WIN32)
 ELSEIF (APPLE)
     set(usb_srcs ${usb_srcs} mac/ophid_usbmon.cpp
             mac/hid.c)
-    set(usb_libs CoreFoundation IOKit)
+    find_library(CoreFoundation_lib CoreFoundation)
+    find_library(IOKit_lib IOKit)
+    set(usb_libs ${CoreFoundation_lib} ${IOKit_lib})
 ELSEIF (UNIX)
     set(usb_srcs ${usb_srcs} linux/ophid_usbmon.cpp
             linux/hid.c

@@ -6,7 +6,6 @@ set(ssp_srcs
         )
 add_library(ssp ${ssp_srcs})
 if (UNIX)
-    add_subdirectory(serialport)
     set(libs serialport pthread)
 else()
     set(libs Qt5::SerialPort)

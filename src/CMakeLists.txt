@@ -6,6 +6,7 @@ set(QT_LIBRARIES Qt5::Widgets Qt5::SerialPort)
 
 if (UNIX)
     include_directories(serialport)
+    add_subdirectory(serialport)
 else()
     add_definitions(-DUSE_QSERIALPORT)
 endif()

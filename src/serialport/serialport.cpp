@@ -84,12 +84,12 @@ int set_opt(int fd,int wSpeed, int wBits, char cEvent, int wStop)
             cfsetospeed(&newtio, B115200);
             break;
         case 460800:
-            cfsetispeed(&newtio, B460800);
-            cfsetospeed(&newtio, B460800);
+//            cfsetispeed(&newtio, B460800);
+  //          cfsetospeed(&newtio, B460800);
             break;
         case 1500000:
-            cfsetispeed(&newtio, B1500000);
-            cfsetospeed(&newtio, B1500000);
+ //           cfsetispeed(&newtio, B1500000);
+   //         cfsetospeed(&newtio, B1500000);
             break;
         default:
             cfsetispeed(&newtio, B115200);

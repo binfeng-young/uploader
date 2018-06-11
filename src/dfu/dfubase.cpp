@@ -691,7 +691,7 @@ DFU::Status DFUBase::UploadFirmware(const std::string &sfile, const bool &verify
     if (debug) {
        // qDebug() << "Starting Firmware Uploading...";
     }
-    std::ifstream file(sfile);
+    std::ifstream file(sfile, ios::binary);
     if (!file.is_open()) {
         if (debug) {
             //qDebug() << "Failed to open file" << sfile;

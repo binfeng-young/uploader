@@ -19,7 +19,7 @@ enum {
 class SerialPort {
     enum status { opened, closed, error };
 public:
-    SerialPort();
+    SerialPort(bool debug = false);
     virtual ~SerialPort();
 
     bool openPort(const std::string & deviceName);
@@ -30,6 +30,7 @@ public:
 private:
     int m_fd;
     status m_status;
+    bool m_debug;
 };
 
 

@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    SerialPort serialPort;
+    SerialPort serialPort(debug);
     serialPort.openPort(portName);
     if (!serialPort.isOpen()) {
         std::cout << "Could not open serial port: ttyUSB0" << std::endl;
@@ -94,7 +94,6 @@ int main(int argc, char *argv[])
     if (!dfu.ready()) {
         return -1;
     }
-    std::cout << "ready" << std::endl;
     dfu.AbortOperation();
     if (!dfu.enterDFU(0)) {
         std::cout << "Could not enter DFU mode\n" << std::endl;
@@ -105,15 +104,15 @@ int main(int argc, char *argv[])
         std::cout << "Could not detect a board, aborting!" << std::endl;
         return -1;
     }
-    std::cout << "Found " << dfu.numberOfDevices << "\n";
+    std::cout << "Found " << dfu.numberOfDevices << "device\n";
     for (int x = 0; x < dfu.numberOfDevices; ++x) {
         std::cout << "Device #" << x << "\n";
         std::cout << "Device ID=" << dfu.devices[x].ID << "\n";
         std::cout << "Device Readable=" << dfu.devices[x].Readable << "\n";
         std::cout << "Device Writable=" << dfu.devices[x].Writable << "\n";
         std::cout << "Device SizeOfCode=" << dfu.devices[x].SizeOfCode << "\n";
-        std::cout << "BL Version=" << (uint32_t)dfu.devices[x].BL_Version << "\n";
         std::cout << "Device SizeOfDesc=" << dfu.devices[x].SizeOfDesc << "\n";
+        std::cout << "BL Version=" << (uint32_t)dfu.devices[x].BL_Version << "\n";
         std::cout << "FW CRC=" << dfu.devices[x].FW_CRC << "\n";
 
         //int size = ((DFU::device)dfu.devices[x]).SizeOfDesc;
@@ -131,7 +130,6 @@ int main(int argc, char *argv[])
         return -1;
     }
     dfu.AbortOperation();
-    std::cout << "Uploading..." << std::endl;
 
     // this call is asynchronous so the only false status it will report
     // is when it is already running...

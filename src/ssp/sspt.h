@@ -35,7 +35,7 @@ private:
     void pfCallBack(uint8_t *, uint16_t) override;
 
 protected:
-    void run();
+    void run() override;
 };
 
 #endif // SSPT_H

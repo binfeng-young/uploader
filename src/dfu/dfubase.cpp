@@ -693,9 +693,6 @@ DFU::Status DFUBase::UploadFirmware(const std::string &sfile, const bool &verify
     }
     std::ifstream file(sfile, ios::binary);
     if (!file.is_open()) {
-        if (debug) {
-            //qDebug() << "Failed to open file" << sfile;
-        }
         return DFU::abort;
     }
     std::stringstream streambuf;
@@ -703,7 +700,7 @@ DFU::Status DFUBase::UploadFirmware(const std::string &sfile, const bool &verify
     std::string arr(streambuf.str());
 
     if (debug) {
-        //qDebug() << "Bytes Loaded=" << arr.length();
+        std::cout << "Bytes Loaded=" << arr.length()<< std::endl;
     }
     if (arr.size() % 4 != 0) {
         int pad = arr.size() / 4;
@@ -714,20 +711,20 @@ DFU::Status DFUBase::UploadFirmware(const std::string &sfile, const bool &verify
     }
     if (devices[device].SizeOfCode < (uint32_t)arr.size()) {
         if (debug) {
-            //qDebug() << "ERROR file to big for device";
+            std::cout << "ERROR file to big for device" << std::endl;
         }
         return DFU::abort;;
     }
 
     uint32_t crc = DFUBase::CRCFromQBArray(arr, devices[device].SizeOfCode);
     if (debug) {
-        //qDebug() << "NEW FIRMWARE CRC=" << crc;
+        std::cout << "NEW FIRMWARE CRC=" << crc << std::endl;
     }
 
     if (!StartUpload(arr.size(), DFU::FW, crc)) {
         ret = StatusRequest();
         if (debug) {
-            //qDebug() << "StartUpload failed";
+            //std::cout << "StartUpload failed" << std::endl;
             //qDebug() << "StartUpload returned:" << StatusToString(ret);
         }
         return ret;
@@ -736,7 +733,7 @@ DFU::Status DFUBase::UploadFirmware(const std::string &sfile, const bool &verify
     //emit operationProgress("Erasing, please wait...");
 
     if (debug) {
-        //qDebug() << "Erasing memory";
+        std::cout << "Erasing memory..." << std::endl;
     }
     if (StatusRequest() == DFU::abort) {
         return DFU::abort;
@@ -747,7 +744,7 @@ DFU::Status DFUBase::UploadFirmware(const std::string &sfile, const bool &verify
     for (int x = 0; x < 3; ++x) {
         ret = StatusRequest();
         if (debug) {
-            //qDebug() << "Erase returned: " << StatusToString(ret);
+            std::cout << "Erase returned: " << StatusToString(ret) << std::endl;
         }
         if (ret == DFU::uploading) {
             break;
@@ -759,16 +756,16 @@ DFU::Status DFUBase::UploadFirmware(const std::string &sfile, const bool &verify
     if (!UploadData(arr.size(), arr)) {
         ret = StatusRequest();
         if (debug) {
-            //qDebug() << "Upload failed (upload data)";
-            //qDebug() << "UploadData returned:" << StatusToString(ret);
+            std::cout << "Upload failed (upload data)"<< std::endl;
+            std::cout << "UploadData returned:" << StatusToString(ret)<< std::endl;
         }
         return ret;
     }
     if (!EndOperation()) {
         ret = StatusRequest();
         if (debug) {
-            //qDebug() << "Upload failed (end operation)";
-            //qDebug() << "EndOperation returned:" << StatusToString(ret);
+            std::cout << "Upload failed (end operation)" << std::endl;
+            std::cout << "EndOperation returned:" << StatusToString(ret) << std::endl;
         }
         return ret;
     }
@@ -789,7 +786,7 @@ DFU::Status DFUBase::UploadFirmware(const std::string &sfile, const bool &verify
     }
 
     if (debug) {
-        //qDebug() << "Status=" << ret;
+        std::cout << "Status=" << ret << std::endl;
     }
     cout << "Firmware Uploading succeeded\n";
     return ret;
@@ -905,22 +902,20 @@ std::string DFUBase::StatusToString(DFU::Status const & status)
  */
 void DFUBase::printProgBar(int const & percent, std::string const & label)
 {
-    if (debug) {
-        std::string bar;
-        for (int i = 0; i < 50; i++) {
-            if (i < (percent / 2)) {
-                bar.replace(i, 1, "=");
-            } else if (i == (percent / 2)) {
-                bar.replace(i, 1, ">");
-            } else {
-                bar.replace(i, 1, " ");
-            }
+    std::string bar;
+    for (int i = 0; i < 50; i++) {
+        if (i < (percent / 2)) {
+            bar.replace(i, 1, "=");
+        } else if (i == (percent / 2)) {
+            bar.replace(i, 1, ">");
+        } else {
+            bar.replace(i, 1, " ");
         }
-
-        std::cout << "\r" << label << "[" << bar << "] ";
-        std::cout.width(3);
-        std::cout << percent << "%     " << std::flush;
     }
+
+    std::cout << "\r" << label << "[" << bar << "] ";
+    std::cout.width(3);
+    std::cout << percent << "%     " << std::flush;
     if (nullptr != printCb) {
         printCb(percent);
     }

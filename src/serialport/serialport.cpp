@@ -10,7 +10,7 @@ extern "C" {
 #include <unistd.h>
 }
 
-SerialPort::SerialPort() : m_fd(-1), m_status(SerialPort::closed)
+SerialPort::SerialPort(bool debug) :m_debug(debug), m_fd(-1), m_status(SerialPort::closed)
 {
 
 }
@@ -123,7 +123,9 @@ bool SerialPort::openPort(const std::string & deviceName)
 {
     char dev[20];
     sprintf(dev, "/dev/%s",deviceName.c_str());
-    printf("dev :%s\n",dev);
+    if (m_debug) {
+        printf("dev :%s\n", dev);
+    }
     int wRlt = 0;
 
     m_fd = open(dev, O_RDWR | O_NOCTTY | O_NONBLOCK | O_NDELAY);
@@ -143,7 +145,9 @@ bool SerialPort::openPort(const std::string & deviceName)
     }
     else
     {
-        printf("fcntl=%d\n",fcntl(m_fd, F_SETFL,0));
+        if (m_debug) {
+            printf("fcntl=%d\n", fcntl(m_fd, F_SETFL, 0));
+        }
     }
 
     if (isatty(STDIN_FILENO)==0)
@@ -154,10 +158,14 @@ bool SerialPort::openPort(const std::string & deviceName)
     }
     else
     {
-        printf("isatty success!\n");
+        if (m_debug) {
+            printf("isatty success!\n");
+        }
     }
 
-    printf("fd-open=%d\n",m_fd);
+    if (m_debug) {
+        printf("fd-open=%d\n", m_fd);
+    }
     wRlt = set_opt(m_fd, 115200, UART_DATAT_BIT_8, 'N', UART_STOP_BIT_2);
     if (wRlt < 0)
     {
@@ -165,7 +173,9 @@ bool SerialPort::openPort(const std::string & deviceName)
         m_status = SerialPort::error;
         return false;
     }
-    printf("opened\n");
+    if (m_debug) {
+        printf("opened\n");
+    }
     m_status = SerialPort::opened;
     return true;
 }

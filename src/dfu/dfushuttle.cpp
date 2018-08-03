@@ -14,6 +14,7 @@
 
 void usage()
 {
+    std::cout << "ddfasedgqweg!!!!" << std::endl;
     std::cout << "stm firmware upgrade" << std::endl;
     std::cout << "Usage: dfu_shuttle [Options]" << std::endl;
     std::cout << "\tfile\t\tFirmware file path" << std::endl;
@@ -81,7 +82,7 @@ int main(int argc, char *argv[])
     SerialPort serialPort(debug);
     serialPort.openPort(portName);
     if (!serialPort.isOpen()) {
-        std::cout << "Could not open serial port: ttyUSB0" << std::endl;
+        std::cout << "Could not open serial port:"<< portName << std::endl;
         return -1;
     }
     uint8_t toBLCmd[] = {0xb5, 0x62, 0x00, 0x03, 0x4c, 0x00, 0x4c};

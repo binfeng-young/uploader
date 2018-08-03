@@ -8,6 +8,7 @@ extern "C" {
 #include <termios.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/select.h>
 }
 
 SerialPort::SerialPort(bool debug) :m_debug(debug), m_fd(-1), m_status(SerialPort::closed)
@@ -150,7 +151,7 @@ bool SerialPort::openPort(const std::string & deviceName)
         }
     }
 
-    if (isatty(STDIN_FILENO)==0)
+    if (isatty(m_fd)==0)
     {
         printf("standard input is not a terminal device.\n");
         m_status = SerialPort::error;

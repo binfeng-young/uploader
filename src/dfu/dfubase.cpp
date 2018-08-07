@@ -717,9 +717,7 @@ DFU::Status DFUBase::UploadFirmware(const std::string &sfile, const bool &verify
     }
 
     uint32_t crc = DFUBase::CRCFromQBArray(arr, devices[device].SizeOfCode);
-    if (debug) {
-        std::cout << "NEW FIRMWARE CRC=" << crc << std::endl;
-    }
+    std::cout << "NEW FIRMWARE CRC=" << crc << std::endl;
 
     if (!StartUpload(arr.size(), DFU::FW, crc)) {
         ret = StatusRequest();
@@ -732,9 +730,9 @@ DFU::Status DFUBase::UploadFirmware(const std::string &sfile, const bool &verify
 
     //emit operationProgress("Erasing, please wait...");
 
-    if (debug) {
+    //if (debug) {
         std::cout << "Erasing memory..." << std::endl;
-    }
+    //}
     if (StatusRequest() == DFU::abort) {
         return DFU::abort;
     }

@@ -49,7 +49,7 @@
 #include <QtSerialPort/QSerialPortInfo>
 #include <QDebug>
 
-#define DFU_DEBUG true
+#define DFU_DEBUG false
 
 const int UploaderWidget::BOARD_EVENT_TIMEOUT = 20000;
 const int UploaderWidget::AUTOUPDATE_CLOSE_TIMEOUT = 7000;

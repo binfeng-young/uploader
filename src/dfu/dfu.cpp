@@ -65,7 +65,12 @@ DFUObject::DFUObject(bool _debug, bool _use_serial, QString portname) :
             mready = false;
             return;
         }
+        unsigned char cmd[] = {0xb5, 0x62, 0x00, 0x03, 0x4c, 0x00, 0x4c};
+        for (int i = 0; i < 7; i ++) {
+            info->pfSerialWrite(cmd[i]);
+        }
         serialhandle = new qsspt(info, false /*debug*/);
+
         int count = 0;
         while (!serialhandle->ssp_Synchronise() && (count < 10)) {
             if (debug) {

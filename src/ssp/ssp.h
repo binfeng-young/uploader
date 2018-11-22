@@ -5,6 +5,7 @@
 #include "port.h"
 
 #include <stdint.h>
+#include <string>
 
 /** LOCAL DEFINITIONS **/
 #ifndef TRUE
@@ -70,7 +71,7 @@ private:
 
     void        sf_SendPacket();
     void        sf_SendAckPacket(uint8_t seqNumber);
-    void        sf_MakePacket(uint8_t *buf, const uint8_t *pdata, uint16_t length, uint8_t seqNo);
+    void        sf_MakePacket(uint8_t *buf, const std::string &pdata, uint8_t seqNo);
     int16_t     sf_ReceivePacket();
     uint16_t    ssp_SendDataBlock(uint8_t *data, uint16_t length);
 
@@ -80,7 +81,7 @@ public:
     int16_t     ssp_ReceiveProcess();
     int16_t     ssp_SendProcess();
     uint16_t    ssp_SendString(char *str);
-    int16_t     ssp_SendData(const uint8_t *data, const uint16_t length);
+    int16_t     ssp_SendData(const std::string &data);
     void        ssp_Init(const PortConfig_t *const info);
     int16_t     ssp_ReceiveByte();
     uint16_t    ssp_Synchronise();

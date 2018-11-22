@@ -228,8 +228,8 @@ uint16_t ssp::ssp_SendDataBlock(uint8_t *data, uint16_t length)
 {
     int16_t packet_status = SSP_TX_WAITING;
     uint16_t retval = FALSE;
-
-    packet_status = ssp_SendData(data, length); // send the data
+    std::string str(data, data + length);
+    packet_status = ssp_SendData(str); // send the data
     // TODO the loop is non blocking and will spin as fast as the CPU allows
     while (packet_status == SSP_TX_WAITING) { // check the status
         (void)ssp_ReceiveProcess(); // process any bytes received.
@@ -255,11 +255,11 @@ uint16_t ssp::ssp_SendDataBlock(uint8_t *data, uint16_t length)
  * \note
  *
  */
-int16_t ssp::ssp_SendData(const uint8_t *data, const uint16_t length)
+int16_t ssp::ssp_SendData(const std::string &data)
 {
     int16_t value = SSP_TX_WAITING;
 
-    if ((length + 2) > thisport->txBufSize) {
+    if ((data.length() + 2) > thisport->txBufSize) {
         // TRYING to send too much data.
         value = SSP_TX_BUFOVERRUN;
     } else if (thisport->SendState == SSP_IDLE) {
@@ -299,7 +299,7 @@ int16_t ssp::ssp_SendData(const uint8_t *data, const uint16_t length)
         thisport->SendState  = SSP_AWAITING_ACK;
         value = SSP_TX_WAITING;
         thisport->retryCount = 0; // zero out the retry counter for this transmission
-        sf_MakePacket(thisport->txBuf, data, length, thisport->txSeqNo);
+        sf_MakePacket(thisport->txBuf, data, thisport->txSeqNo);
         sf_SendPacket(); // punch out the packet to the serial port
         sf_SetSendTimeout(); // do the timeout values
 //        if (debug) {
@@ -338,7 +338,7 @@ uint16_t ssp::ssp_Synchronise()
     thisport->txSeqNo = 0; // make this zero to cause the other end to re-synch with us
     SETBIT(thisport->flags, SENT_SYNCH);
     // TODO - should this be using ssp_SendPacketData()??
-    sf_MakePacket(thisport->txBuf, NULL, 0, thisport->txSeqNo); // construct the packet
+    sf_MakePacket(thisport->txBuf, std::string(), thisport->txSeqNo); // construct the packet
     sf_SendPacket();
     sf_SetSendTimeout();
     thisport->SendState = SSP_AWAITING_ACK;
@@ -405,12 +405,12 @@ void ssp::sf_SendPacket()
  *  3. TODO: Should this function return an error if data length to be sent is greater th tx buffer size?
  *
  */
-void ssp::sf_MakePacket(uint8_t *txBuf, const uint8_t *pdata, uint16_t length, uint8_t seqNo)
+void ssp::sf_MakePacket(uint8_t *txBuf, const std::string &pdata, uint8_t seqNo)
 {
     uint16_t crc    = 0xffff;
     uint16_t bufPos = 0;
     uint8_t b;
-
+    uint16_t length = pdata.length();
     // add 1 for the seq. number
     txBuf[LENGTH] = length + 1;
     txBuf[SEQNUM] = seqNo;
@@ -418,7 +418,7 @@ void ssp::sf_MakePacket(uint8_t *txBuf, const uint8_t *pdata, uint16_t length, u
 
     length = length + 2; // add two for the length and seqno bytes which are added before the loop.
     for (bufPos = 2; bufPos < length; bufPos++) {
-        b   = *pdata++;
+        b   = pdata[bufPos - 2];
         txBuf[bufPos] = b;
         crc = sf_crc16(crc, b); // update CRC value
     }
@@ -441,7 +441,7 @@ void ssp::sf_SendAckPacket(uint8_t seqNumber)
     uint8_t AckSeqNumber = SETBIT(seqNumber, ACK_BIT);
 
     // create the packet, note we pass AckSequenceNumber directly
-    sf_MakePacket(thisport->txBuf, NULL, 0, AckSeqNumber);
+    sf_MakePacket(thisport->txBuf, std::string(), AckSeqNumber);
     sf_SendPacket();
 //    if (debug) {
 //        qDebug() << "Sent ACK PACKET:" << seqNumber;

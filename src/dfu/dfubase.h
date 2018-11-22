@@ -118,7 +118,7 @@ namespace DFU {
         bool findDevices();
         int JumpToApp(bool safeboot, bool erase);
         int ResetDevice(void);
-        DFU::Status StatusRequest();
+        DFU::Status StatusRequest(int32_t* aditional = nullptr);
         bool EndOperation();
         int AbortOperation(void);
         bool ready()

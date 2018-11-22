@@ -31,6 +31,7 @@ private:
     uint16_t receivestatus;
     std::condition_variable sendwait;
     std::mutex msendwait;
+    std::queue<std::string> writeArray_;
     bool debug;
     void pfCallBack(uint8_t *, uint16_t) override;
 

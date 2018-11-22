@@ -14,12 +14,14 @@ void sspt::run()
     while (!endthread) {
         receivestatus = ssp_ReceiveProcess();
         sendstatus = ssp_SendProcess();
-        sendbufmutex.lock();
-        if (datapending && receivestatus == SSP_TX_IDLE) {
-            ssp_SendData(mbuf, msize);
-            datapending = false;
+
+        if (!writeArray_.empty() && receivestatus == SSP_TX_IDLE) {
+            std::lock_guard<std::mutex> lock(sendbufmutex);
+            std::string str = writeArray_.front();
+            ssp_SendData(writeArray_.front());
+            writeArray_.pop();
         }
-        sendbufmutex.unlock();
+        //sendbufmutex.unlock();
         if (sendstatus == SSP_TX_ACKED) {
             sendwait.notify_all();
         }
@@ -32,20 +34,25 @@ bool sspt::sendData(uint8_t *buf, uint16_t size)
 //        QByteArray data((const char *)buf, size);
 //        qDebug() << "SSP TX " << data.toHex();
 //    }
-    if (datapending) {
-        return false;
-    }
     sendbufmutex.lock();
-    datapending = true;
-    mbuf  = buf;
-    msize = size;
+    std::string writeBuff(buf, buf + size);
+    writeArray_.push(writeBuff);
     sendbufmutex.unlock();
-    // TODO why do we wait 10 seconds ? why do we then ignore the timeout ?
-    // There is a ssp_SendDataBlock method...
-    //msendwait.lock();
+//
+//    if (datapending) {
+//        return false;
+//    }
+//
+//
+//    datapending = true;
+//    mbuf  = buf;
+//    msize = size;
+//    // TODO why do we wait 10 seconds ? why do we then ignore the timeout ?
+//    // There is a ssp_SendDataBlock method...
+//    //msendwait.lock();
     std::unique_lock<std::mutex> lck(msendwait);
     //sendwait.wait(&msendwait, 1000);
-    sendwait.wait_for(lck, std::chrono::seconds(1));
+    sendwait.wait_for(lck, std::chrono::seconds(10));
 
     return true;
 }

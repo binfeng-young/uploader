@@ -257,7 +257,10 @@ bool DFUBase::UploadData(int32_t const & numberOfBytes, const std::string & data
     int packetsize;
     float percentage;
     int laspercentage = 0;
-    for (int32_t packetcount = 0; packetcount < numberOfPackets; ++packetcount) {
+    int retryCount = 0;
+    Time check_time;
+    check_time.start();
+    for (int32_t packetcount = 0; packetcount < numberOfPackets; packetcount) {
         percentage = (float)(packetcount + 1) / numberOfPackets * 100;
         if (laspercentage != (int)percentage) {
             printProgBar((int)percentage, "UPLOADING");
@@ -285,9 +288,7 @@ bool DFUBase::UploadData(int32_t const & numberOfBytes, const std::string & data
         // qDebug()<<" Data0="<<(int)data[0]<<" Data0="<<(int)data[1]<<" Data0="<<(int)data[2]<<" Data0="<<(int)data[3]<<" buf6="<<(int)buf[6]<<" buf7="<<(int)buf[7]<<" buf8="<<(int)buf[8]<<" buf9="<<(int)buf[9];
         // QThread::msleep(send_delay);
 
-        // if (StatusRequest() != DFU::uploading) {
-        // return false;
-        // }
+
         int result = sendData(buf, BUF_LEN);
         // if (debug) {
         // qDebug() << "sent:" << result;
@@ -295,9 +296,25 @@ bool DFUBase::UploadData(int32_t const & numberOfBytes, const std::string & data
         if (result < 1) {
             return false;
         }
+
+        if (check_time.elapsed() > 1000) {
+            check_time.start();
+            int32_t aditional;
+            if (StatusRequest(&aditional) == DFU::wrong_packet_received) {
+                std::cout << "wrong_packet_received, retry...." << std::endl;
+                if (retryCount ++ > 5) {
+                    return false;
+                } else {
+                    packetcount = aditional - 1;
+                    //std::cout << packetcount << std::endl;
+                    continue;
+                }
+            }
+        }
         // if (debug) {
         // qDebug() << "UPLOAD:" << "Data=" << (int)buf[6] << (int)buf[7] << (int)buf[8] << (int)buf[9] << ";" << result << " bytes sent";
         // }
+        packetcount++;
     }
     return true;
 }
@@ -525,7 +542,7 @@ int DFUBase::JumpToApp(bool safeboot, bool erase)
     return sendData(buf, BUF_LEN);
 }
 
-DFU::Status DFUBase::StatusRequest()
+DFU::Status DFUBase::StatusRequest(int32_t* aditional)
 {
     char buf[BUF_LEN];
 
@@ -560,6 +577,13 @@ DFU::Status DFUBase::StatusRequest()
     result = receiveData(buf, BUF_LEN);
     if (debug) {
         //qDebug() << "StatusRequest: " << result << " bytes received";
+    }
+    if (nullptr != aditional) {
+        uint32_t ret = ((uint32_t)buf[2]) << 24;
+        ret += ((uint32_t)buf[3]) << 16;
+        ret += ((uint32_t)buf[4]) << 8;
+        ret += buf[5];
+        *aditional = ret;
     }
     if (buf[1] == DFU::Status_Rep) {
         return (DFU::Status)buf[6];

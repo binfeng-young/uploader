@@ -14,7 +14,6 @@
 
 void usage()
 {
-    std::cout << "ddfasedgqweg!!!!" << std::endl;
     std::cout << "stm firmware upgrade" << std::endl;
     std::cout << "Usage: dfu_shuttle [Options]" << std::endl;
     std::cout << "\tfile\t\tFirmware file path" << std::endl;
@@ -78,7 +77,7 @@ int main(int argc, char *argv[])
         std::cout << "Cannot open file " << filePath << std::endl;
         return -1;
     }
-
+    fwfile.close();
     SerialPort serialPort(debug);
     serialPort.openPort(portName);
     if (!serialPort.isOpen()) {

@@ -722,7 +722,7 @@ DFU::Status DFUBase::UploadFirmware(const std::string &sfile, const bool &verify
     std::stringstream streambuf;
     streambuf << file.rdbuf();
     std::string arr(streambuf.str());
-
+    file.close();
     if (debug) {
         std::cout << "Bytes Loaded=" << arr.length()<< std::endl;
     }
@@ -830,6 +830,7 @@ DFU::Status DFUBase::CompareFirmware(const std::string &sfile, const CompareType
     if (debug) {
         std::cout  << "Bytes Loaded=" << arr.length() << std::endl;
     }
+    file.close();
     if (arr.length() % 4 != 0) {
         int pad = arr.length() / 4;
         ++pad;

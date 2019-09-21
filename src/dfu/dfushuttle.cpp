@@ -17,12 +17,13 @@ void usage()
     std::cout << "stm firmware upgrade" << std::endl;
     std::cout << "Usage: dfu_shuttle [Options]" << std::endl;
     std::cout << "\tfile\t\tFirmware file path" << std::endl;
-    std::cout << "\t\t\t\tIf no file is specified - /mnt/UDISK/fw_hx_x500.bin" << std::endl;
+    std::cout << "\t\t\t\tIf no file is specified - /mnt/UDISK/fw_hx_x500.hxfw" << std::endl;
     std::cout << "\tserial_port" << std::endl;
     std::cout << "\t\t\t\tIf no serial port is specified - ttyS3" << std::endl;
     std::cout << "\t-h or --help\t\tThis help" << std::endl;
     std::cout << "\t--verify  \t\tVerify the correctness of the upgrade" << std::endl;
     std::cout << "\t-d         \t\tDebug log" << std::endl;
+    std::cout << "\t-f         \t\tForced upgrade, ignore fw check" <<std::endl;
 }
 bool removeAll(std::vector<std::string> &list, std::string var) {
     bool hasVar = false;
@@ -48,6 +49,7 @@ int main(int argc, char *argv[])
     }
     bool verify = removeAll(arguments_list, "--verify");
     bool debug = removeAll(arguments_list, "-d");
+    bool forced = removeAll(arguments_list, "-f");
     for(int i = 0; i < 3 ; i++) {
         if (system("killall bvrobot")) {
             break;
@@ -65,7 +67,7 @@ int main(int argc, char *argv[])
     else {
         usage();
 
-        filePath = "/mnt/UDISK/fw_hx_x500.bin";
+        filePath = "/mnt/UDISK/fw_hx_x500.hxfw";
         portName = "ttyS3";
     }
     std::cout << "file Path : " << filePath << std::endl;
@@ -77,6 +79,9 @@ int main(int argc, char *argv[])
         std::cout << "Cannot open file " << filePath << std::endl;
         return -1;
     }
+    std::stringstream streambuf;
+    streambuf << fwfile.rdbuf();
+    std::string loadedFW(streambuf.str());
     fwfile.close();
     SerialPort serialPort(debug);
     serialPort.openPort(portName);
@@ -86,6 +91,12 @@ int main(int argc, char *argv[])
     }
     uint8_t toBLCmd[] = {0xb5, 0x62, 0x00, 0x03, 0x4c, 0x00, 0x4c};
     if (serialPort.writeBuff(reinterpret_cast<char *>(toBLCmd), 7) <= 0) {
+        std::cout << "Could not write serial" << std::endl;
+        return -1;
+    }
+
+    uint8_t toBLCmd2[] = {0xb5, 0x62, 0x00, 0x04, 0x01, 0x78, 0x01, 0x78};
+    if (serialPort.writeBuff(reinterpret_cast<char *>(toBLCmd2), 8) <= 0) {
         std::cout << "Could not write serial" << std::endl;
         return -1;
     }
@@ -107,7 +118,7 @@ int main(int argc, char *argv[])
     std::cout << "Found " << dfu.numberOfDevices << "device\n";
     for (int x = 0; x < dfu.numberOfDevices; ++x) {
         std::cout << "Device #" << x << "\n";
-        std::cout << "Device ID=" << dfu.devices[x].ID << "\n";
+        std::cout << "Device ID=" << std::hex << dfu.devices[x].ID << "\n" << std::oct;
         std::cout << "Device Readable=" << dfu.devices[x].Readable << "\n";
         std::cout << "Device Writable=" << dfu.devices[x].Writable << "\n";
         std::cout << "Device SizeOfCode=" << dfu.devices[x].SizeOfCode << "\n";
@@ -128,6 +139,30 @@ int main(int argc, char *argv[])
     if (!dfu.devices[device].Writable) {
         std::cout << "ERROR device not Writable\n" << std::endl;
         return -1;
+    }
+    if (dfu.devices[device].SizeOfCode < loadedFW.size()) {
+        std::cout << "ERROR file too big for device\n" << std::endl;
+        return -1;
+    }
+    if (!forced) {
+        std::string desc = loadedFW.substr(loadedFW.size() - 100);
+        std::string head = "HxFw";
+        if (desc.substr(0, head.size()) == head) {
+            // Now do sanity checking:
+            // - Check whether board type matches firmware:
+            int board = dfu.devices[device].ID;
+            int firmwareBoard = ((uint16_t) (uint8_t) desc.at(12) << 8) + (uint16_t) (uint8_t) desc.at(13);
+            if (firmwareBoard != board) {
+                std::cout << "Error: Device ID: firmware 0x" << std::hex << firmwareBoard << " does not match board 0x"
+                          << std::hex << board << std::endl;
+                return -1;
+            }
+        } else {
+            // The firmware is not packaged, just upload the text in the description field
+            // if it is there.
+            std::cout << "Error: firmware is not packaged(.hxfw)" << std::endl;
+            return -1;
+        }
     }
     dfu.AbortOperation();
 

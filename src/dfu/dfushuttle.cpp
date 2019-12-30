@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
     std::cout << "Found " << dfu.numberOfDevices << "device\n";
     for (int x = 0; x < dfu.numberOfDevices; ++x) {
         std::cout << "Device #" << x << "\n";
-        std::cout << "Device ID=" << std::hex << dfu.devices[x].ID << "\n" << std::oct;
+        std::cout << "Device ID=" << std::hex << dfu.devices[x].ID << "\n" << std::dec;
         std::cout << "Device Readable=" << dfu.devices[x].Readable << "\n";
         std::cout << "Device Writable=" << dfu.devices[x].Writable << "\n";
         std::cout << "Device SizeOfCode=" << dfu.devices[x].SizeOfCode << "\n";
